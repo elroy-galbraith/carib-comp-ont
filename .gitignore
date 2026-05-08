@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Generated files — do not commit vault.ttl directly; regenerate from vault/*.md
+vault/vault.ttl
+
+# Inbox processed PDFs (large binaries, not useful in history)
+inbox/processed/
+
+# Environment / secrets
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Demo assets (large PDFs for recording — store separately)
+demo_assets/

@@ -1,0 +1,19 @@
+# CQ3 — What terms are formally defined in the DPA 2020, and what do they mean?
+#
+# Expected result (seed data): four Definition entities from §2.
+
+PREFIX cco:  <https://ontology.carib-comp.org/compliance/>
+PREFIX ccoe: <https://ontology.carib-comp.org/compliance/entity/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?definition ?label ?section ?definitionText
+WHERE {
+    ?definition a cco:Definition ;
+                rdfs:label ?label ;
+                dcterms:isPartOf ccoe:dpa2020 .
+    OPTIONAL { ?definition dcterms:source ?section . }
+    OPTIONAL { ?definition skos:definition ?definitionText . }
+}
+ORDER BY ?label

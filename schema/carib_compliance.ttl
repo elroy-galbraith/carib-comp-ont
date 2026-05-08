@@ -1,0 +1,85 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# FIBO namespaces — subClassOf used where alignment is clean.
+# Full FIBO imports are NOT declared; these IRIs serve as alignment anchors.
+@prefix fibo-be-ge-ge: <https://spec.edmcouncil.org/fibo/ontology/BE/GovernmentEntities/GovernmentEntities/> .
+@prefix fibo-fbc-fct-rga: <https://spec.edmcouncil.org/fibo/ontology/FBC/FunctionalEntities/RegulatoryAgencies/> .
+
+@prefix cco: <https://ontology.carib-comp.org/compliance/> .
+
+# ── Ontology metadata ─────────────────────────────────────────────────────────
+
+<https://ontology.carib-comp.org/compliance/>
+    a owl:Ontology ;
+    rdfs:label "Caribbean Compliance Ontology"@en ;
+    dcterms:title "Caribbean Compliance Ontology — Prototype v0.1"@en ;
+    dcterms:description """A prototype ontology for Caribbean data-protection and
+cybercrime legislation. Aligned to FIBO for Regulator and Statute
+where the alignment is clean; remaining classes are domain-native."""@en ;
+    dcterms:creator "Elroy Galbraith" ;
+    dcterms:created "2026-05-08"^^xsd:date ;
+    dcterms:license <https://opensource.org/licenses/MIT> ;
+    owl:versionInfo "0.1.0" .
+
+# ── Classes ───────────────────────────────────────────────────────────────────
+
+cco:Statute a owl:Class ;
+    rdfs:label "Statute"@en ;
+    skos:definition """A piece of enacted primary legislation, e.g.
+the Jamaica Data Protection Act 2020."""@en ;
+    rdfs:subClassOf fibo-fbc-fct-rga:Regulation ;
+    rdfs:comment "FIBO alignment: fibo-fbc-fct-rga:Regulation (a binding regulatory instrument)."@en .
+
+cco:Provision a owl:Class ;
+    rdfs:label "Provision"@en ;
+    skos:definition "A numbered section or subsection within a statute."@en .
+
+cco:Definition a owl:Class ;
+    rdfs:label "Definition"@en ;
+    skos:definition "A term formally defined within a statutory provision."@en ;
+    rdfs:subClassOf cco:Provision .
+
+cco:Regulator a owl:Class ;
+    rdfs:label "Regulator"@en ;
+    skos:definition "A governmental body with statutory authority to enforce a statute."@en ;
+    rdfs:subClassOf fibo-be-ge-ge:GovernmentalAuthority ;
+    rdfs:comment "FIBO alignment: fibo-be-ge-ge:GovernmentalAuthority."@en .
+
+cco:Obligation a owl:Class ;
+    rdfs:label "Obligation"@en ;
+    skos:definition "A duty imposed by a statutory provision on a specified class of party."@en .
+
+# ── Object Properties ─────────────────────────────────────────────────────────
+
+cco:definedIn a owl:ObjectProperty ;
+    rdfs:label "defined in"@en ;
+    rdfs:comment "Relates a Definition to the Provision in which it appears."@en ;
+    rdfs:domain cco:Definition ;
+    rdfs:range  cco:Provision .
+
+cco:enforcedBy a owl:ObjectProperty ;
+    rdfs:label "enforced by"@en ;
+    rdfs:comment "Relates a Statute to the Regulator responsible for its enforcement."@en ;
+    rdfs:domain cco:Statute ;
+    rdfs:range  cco:Regulator .
+
+cco:imposesObligationOn a owl:ObjectProperty ;
+    rdfs:label "imposes obligation on"@en ;
+    rdfs:comment "Relates an Obligation to the class of party that bears it."@en ;
+    rdfs:domain cco:Obligation .
+
+cco:applicableTo a owl:ObjectProperty ;
+    rdfs:label "applicable to"@en ;
+    rdfs:comment "Relates a Provision or Obligation to the party or entity it governs."@en ;
+    rdfs:domain cco:Provision .
+
+cco:relatedTo a owl:ObjectProperty ;
+    rdfs:label "related to"@en ;
+    rdfs:comment "General associative relation between any two ontology entities."@en ;
+    rdfs:domain owl:Thing ;
+    rdfs:range  owl:Thing .

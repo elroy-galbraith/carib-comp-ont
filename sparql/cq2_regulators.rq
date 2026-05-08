@@ -1,0 +1,19 @@
+# CQ2 — Which regulators enforce the DPA 2020, and what statutes do they enforce?
+#
+# Expected result (seed data):
+#   regulator               regulatorLabel                    statute   statuteLabel
+#   ccoe:dpa2020_ico        Information Commissioner (Ja...)  dpa2020   Data Protection Act 2020
+
+PREFIX cco:  <https://ontology.carib-comp.org/compliance/>
+PREFIX ccoe: <https://ontology.carib-comp.org/compliance/entity/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?regulator ?regulatorLabel ?statute ?statuteLabel
+WHERE {
+    ?statute a cco:Statute ;
+             cco:enforcedBy ?regulator ;
+             rdfs:label ?statuteLabel .
+    ?regulator a cco:Regulator ;
+               rdfs:label ?regulatorLabel .
+}
+ORDER BY ?statuteLabel

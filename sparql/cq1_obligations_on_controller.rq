@@ -1,0 +1,22 @@
+# CQ1 — List every obligation imposed on a DataController by the DPA 2020.
+#
+# Expected result (seed data):
+#   obligation                            label                                    statute
+#   ccoe:dpa2020_obligation_lawful_...    Obligation to Process ... Lawfully        dpa2020
+
+PREFIX cco:  <https://ontology.carib-comp.org/compliance/>
+PREFIX ccoe: <https://ontology.carib-comp.org/compliance/entity/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?obligation ?obligationLabel ?statute ?statuteLabel
+WHERE {
+    ?obligation a cco:Obligation ;
+                cco:imposesObligationOn ccoe:dpa2020_s2_data_controller ;
+                rdfs:label ?obligationLabel .
+    OPTIONAL {
+        ?obligation dcterms:isPartOf ?statute .
+        ?statute rdfs:label ?statuteLabel .
+    }
+}
+ORDER BY ?obligationLabel
