@@ -19,7 +19,7 @@ Usage:
     python scripts/curator.py --inbox path  # custom inbox directory
 
 Dependencies:
-    pip install watchdog gitpython anthropic PyYAML
+    pip install watchdog gitpython anthropic PyYAML python-dotenv
 """
 from __future__ import annotations
 
@@ -31,6 +31,13 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+# Load .env from repo root (no-op if file absent or python-dotenv not installed)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).parent.parent / ".env")
+except ImportError:
+    pass
 
 try:
     import git

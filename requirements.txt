@@ -4,6 +4,7 @@
 anthropic>=0.25.0       # Haiku API calls in extractor.py
 PyYAML>=6.0             # YAML frontmatter in to_turtle.py / extractor.py
 pyoxigraph>=0.3.22      # In-memory SPARQL store in load_to_oxigraph.py
+python-dotenv>=1.0.0    # Load ANTHROPIC_API_KEY from .env file
 
 # Curator agent
 watchdog>=4.0.0         # inbox/ directory watcher in curator.py

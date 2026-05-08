@@ -11,10 +11,12 @@ Usage:
     python scripts/extractor.py --text "Section 6 ..." --doc-id dpa2020_s6  # raw text mode
 
 Environment:
-    ANTHROPIC_API_KEY  — required for Haiku calls
+    ANTHROPIC_API_KEY  — required for Haiku calls.
+                         Set in your shell or in a .env file at the repo root
+                         (copy .env.example → .env and fill in the key).
 
 Dependencies:
-    pip install anthropic PyYAML
+    pip install anthropic PyYAML python-dotenv
     pip install docling          # preferred PDF extractor
     pip install pdfplumber       # fallback PDF extractor
 """
@@ -28,6 +30,13 @@ from pathlib import Path
 from textwrap import dedent
 
 import yaml
+
+# Load .env from repo root (no-op if file absent or python-dotenv not installed)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).parent.parent / ".env")
+except ImportError:
+    pass
 
 try:
     import anthropic
