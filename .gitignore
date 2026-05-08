@@ -39,3 +39,6 @@ demo_assets/*.pdf
 demo_assets/*.PDF
 demo_assets/*.mp4
 demo_assets/*.mov
+
+# Held-out corpus — evaluation integrity; PDF must never be committed
+held-out/
