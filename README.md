@@ -20,7 +20,7 @@ and merge (or reject).
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/<your-handle>/carib-comp-ont.git
+git clone https://github.com/elroy-galbraith/carib-comp-ont.git
 cd carib-comp-ont
 pip install -r requirements.txt
 
@@ -100,7 +100,8 @@ carib-comp-ont/
 │   └── carib_compliance.ttl   # OWL schema: 5 classes, 5 properties, FIBO subclass
 ├── vault/
 │   ├── dpa2020.md             # Statute — Data Protection Act 2020
-│   ├── dpa2020_s2_*.md        # Definitions from §2
+│   ├── dpa2020_s2.md          # Provision — §2 Interpretation
+│   ├── dpa2020_s2_*.md        # Definitions from §2 (×4)
 │   ├── dpa2020_ico.md         # Regulator — Information Commissioner
 │   ├── dpa2020_obligation_*.md# Obligations
 │   └── vault.ttl              # Generated — do not edit manually
@@ -146,18 +147,19 @@ carib-comp-ont/
 
 ---
 
-## Hand-curated seed (DPA 2020 §1–§2)
+## Hand-curated seed (DPA 2020 §1–§10)
 
-Six entities manually extracted to validate the data shape before automation:
+Eight entities manually extracted to validate the data shape before automation:
 
 | Entity | Class | Source |
 |---|---|---|
 | Data Protection Act 2020 | Statute | §1 |
+| DPA 2020 §2 — Interpretation | Provision | §2 |
 | Personal Data | Definition | §2 |
 | Data Subject | Definition | §2 |
 | Data Controller | Definition | §2 |
 | Data Processor | Definition | §2 |
-| Information Commissioner | Regulator | §5 (referenced §2) |
+| Information Commissioner | Regulator | §5 |
 | Obligation to Process Lawfully | Obligation | §10 |
 
 ---

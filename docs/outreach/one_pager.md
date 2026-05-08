@@ -48,11 +48,11 @@ Key properties of the approach:
 | Component | Status |
 |---|---|
 | OWL schema (5 classes, 5 properties) | ✓ complete |
-| Hand-curated seed (6 entities, DPA 2020 §1–§2) | ✓ complete |
+| Hand-curated seed (8 entities, DPA 2020 §1–§10) | ✓ complete |
 | Single-shot Haiku extractor | ✓ complete |
 | Minimal curator-agent (watchdog + GitPython) | ✓ complete |
 | Oxigraph SPARQL store + 3 competency questions | ✓ complete |
-| Public GitHub repository (MIT) | pending recording |
+| Public GitHub repository (MIT) | ✓ https://github.com/elroy-galbraith/carib-comp-ont |
 
 **Competency questions answered (seed data):**
 1. List every obligation imposed on a DataController by the DPA 2020
@@ -90,4 +90,4 @@ freeze.
 ---
 
 *Caribbean Compliance Ontology is released under the MIT licence.
-Repository: https://github.com/&lt;your-handle&gt;/carib-comp-ont*
+Repository: https://github.com/elroy-galbraith/carib-comp-ont*
