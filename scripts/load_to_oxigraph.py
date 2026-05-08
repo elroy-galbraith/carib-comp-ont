@@ -63,7 +63,7 @@ def load_store() -> pyoxigraph.Store:
             print(f"[load] WARNING: {ttl_path} not found — skipping", file=sys.stderr)
             continue
         data = ttl_path.read_bytes()
-        store.load(data, "text/turtle", base_iri=str(ttl_path.as_uri()))
+        store.load(data, pyoxigraph.RdfFormat.TURTLE, base_iri=str(ttl_path.as_uri()))
         print(f"[load] loaded {ttl_path.name} ({len(data)} bytes, "
               f"{sum(1 for _ in store)} triples total)")
 
@@ -71,9 +71,9 @@ def load_store() -> pyoxigraph.Store:
 
 
 def run_query(store: pyoxigraph.Store, sparql: str, title: str) -> None:
-    print(f"\n{'═'*60}")
+    print(f"\n{'='*60}")
     print(f"  {title}")
-    print(f"{'═'*60}")
+    print(f"{'='*60}")
 
     results = store.query(sparql)
 
