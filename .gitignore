@@ -12,12 +12,18 @@ build/
 # Generated files — do not commit vault.ttl directly; regenerate from vault/*.md
 vault/vault.ttl
 
-# Inbox processed PDFs (large binaries, not useful in history)
+# Inbox PDFs — processing payloads; keep history clean
+inbox/*.pdf
 inbox/processed/
 
-# Environment / secrets
+# Environment / secrets — never commit credentials
 .env
 *.env
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
 
 # OS
 .DS_Store

@@ -35,7 +35,7 @@ from pathlib import Path
 # Load .env from repo root (no-op if file absent or python-dotenv not installed)
 try:
     from dotenv import load_dotenv
-    load_dotenv(Path(__file__).parent.parent / ".env")
+    load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 except ImportError:
     pass
 
@@ -113,7 +113,7 @@ def open_proposal_branch(repo: git.Repo, doc_id: str) -> str:
 
     # Create or reset the proposals branch
     if branch_name in [b.name for b in repo.branches]:
-        log.info("branch %s already exists — resetting to HEAD", branch_name)
+        log.info("branch %s already exists - resetting to HEAD", branch_name)
         repo.git.branch("-D", branch_name)
     repo.git.checkout("-b", branch_name)
     log.info("created branch %s", branch_name)
@@ -137,7 +137,7 @@ def commit_vault_files(repo: git.Repo, vault_files: list[Path],
         f"prompt_version: {PROMPT_VER}\n"
         f"model_snapshot: {MODEL}\n"
         f"timestamp:      {timestamp}\n"
-        f"validation:     PENDING — review before merging\n\n"
+        f"validation:     PENDING - review before merging\n\n"
         f"Files:\n" + "\n".join(f"  {p}" for p in rel_paths)
     )
     repo.index.commit(commit_msg)
@@ -153,7 +153,7 @@ def archive_pdf(pdf_path: Path) -> None:
 
 
 def process_pdf(pdf_path: Path) -> None:
-    log.info("═" * 50)
+    log.info("=" * 50)
     log.info("processing: %s", pdf_path.name)
 
     doc_id = doc_id_from_path(pdf_path)
@@ -168,14 +168,14 @@ def process_pdf(pdf_path: Path) -> None:
         commit_vault_files(repo, vault_files, doc_id, pdf_path)
         archive_pdf(pdf_path)
 
-        log.info("═" * 50)
+        log.info("=" * 50)
         log.info("PROPOSAL READY")
         log.info("  branch:  %s", branch_name)
         log.info("  files:   %d", len(vault_files))
         log.info("  review:  git log %s", branch_name)
         log.info("  diff:    git diff main...%s", branch_name)
         log.info("  merge:   git checkout main && git merge %s", branch_name)
-        log.info("═" * 50)
+        log.info("=" * 50)
 
     except Exception as exc:
         log.error("pipeline failed for %s: %s", pdf_path.name, exc)
@@ -214,7 +214,7 @@ def process_existing(inbox_dir: Path) -> None:
         try:
             process_pdf(pdf)
         except Exception as exc:
-            log.error("failed: %s — %s", pdf.name, exc)
+            log.error("failed: %s - %s", pdf.name, exc)
 
 
 def main() -> None:

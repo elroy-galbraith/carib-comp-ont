@@ -9,8 +9,7 @@ source_text: >
   There shall be an Information Commissioner who shall be appointed by the
   Governor-General on the advice of the Prime Minister after consultation with
   the Leader of the Opposition.
-properties:
-  enforcedBy: dpa2020
+properties: {}
 prompt_version: manual-v1
 model_snapshot: hand-curated
 validation: PASS

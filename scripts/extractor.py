@@ -34,7 +34,7 @@ import yaml
 # Load .env from repo root (no-op if file absent or python-dotenv not installed)
 try:
     from dotenv import load_dotenv
-    load_dotenv(Path(__file__).parent.parent / ".env")
+    load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 except ImportError:
     pass
 
