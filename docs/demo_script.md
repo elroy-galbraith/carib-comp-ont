@@ -1,6 +1,6 @@
 # Demo Script — Caribbean Compliance Ontology Prototype
 
-**Target duration:** ≤ 2 minutes  
+**Target duration:** ≤ 2 min 30 sec  
 **Audience:** Donalds, Barclay & Osei-Bryson (UWI) — peer-research evaluation  
 **Format:** Screen recording (OBS or QuickTime), terminal + text editor side by side
 
@@ -9,8 +9,9 @@
 ## Pre-recording checklist
 
 - [ ] `pip install -r requirements.txt` completed
-- [ ] `ANTHROPIC_API_KEY` exported in the shell
+- [ ] `ANTHROPIC_API_KEY` exported in the shell (or in `.env` at repo root)
 - [ ] `python scripts/to_turtle.py` run — `vault/vault.ttl` exists
+- [ ] `python scripts/ask.py "test"` smoke-checked once (warms up dependencies)
 - [ ] `git status` is clean on `main`
 - [ ] A DPA 2020 PDF page (e.g. §6) copied to `demo_assets/dpa_2020_s6.pdf`
 - [ ] Terminal font size ≥ 18pt, window maximised
@@ -86,41 +87,60 @@ python scripts/load_to_oxigraph.py
 
 ---
 
-### 01:25–01:55 — Run the competency questions
+### 01:25–01:40 — Run the competency questions
 
-The queries run automatically via `load_to_oxigraph.py`. Highlight CQ1:
+The three CQs run automatically via `load_to_oxigraph.py`. Scroll past quickly,
+pause on CQ1:
 
-```
+```text
 CQ1 — Obligations on DataController
 obligation                                       label                               statute
 ccoe:dpa2020_obligation_lawful_processing        Obligation to Process ... Lawfully  dpa2020
 ```
 
 **Say:**
-> "Three competency questions answered directly from the ontology.
-> CQ1: every obligation the DPA places on a data controller.
-> CQ2: which regulator enforces the act.
-> CQ3: all formally defined terms."
+> "Three pre-written competency questions, answered directly from the
+> ontology — obligations on a data controller, regulators, defined terms."
 
 ---
 
-### 01:55–02:00 — Close on the schema
+### 01:40–02:15 — Ask a natural-language question
 
 ```bash
-cat schema/carib_compliance.ttl | grep subClassOf
+python scripts/ask.py "What does the DPA 2020 say about biometric data?" --show-sparql
+```
+
+The script generates SPARQL with Sonnet, runs it against the in-memory store,
+then summarises the rows. Show all three: the generated query, the raw row,
+the natural-language answer with a `[Biometric Data](vault/...)` citation.
+
+**Say:**
+> "The same graph, queried in plain English. Claude writes the SPARQL,
+> Oxigraph executes it, then Claude summarises the rows — every claim is
+> grounded in a row from the structured graph, with citations back to the
+> reviewable Markdown entity. This is the agent-loop counterpart to the
+> curator: structured authoring on the way in, structured QA on the way out."
+
+---
+
+### 02:15–02:30 — Close on the schema
+
+```bash
+sls subClassOf schema\carib_compliance.ttl
 ```
 
 Show:
-```
+
+```text
 cco:Statute    rdfs:subClassOf fibo-fbc-fct-rga:Regulation .
 cco:Regulator  rdfs:subClassOf fibo-be-ge-ge:GovernmentalAuthority .
 ```
 
 **Say:**
 > "This is the artifact. The methodology is the loop you just watched:
-> drop a statute section in, review the PR, merge, query.
-> The FIBO alignment means the schema can federate with financial-compliance
-> ontologies when the project scales."
+> drop a statute in, review the PR, merge, query — by SPARQL or in plain
+> English. FIBO alignment means the schema can federate with financial-
+> compliance ontologies when the project scales."
 
 ---
 

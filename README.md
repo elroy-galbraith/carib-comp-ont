@@ -40,6 +40,10 @@ python scripts/curator.py --once
 git log proposals/<doc-id>
 git diff main...proposals/<doc-id>
 git checkout main && git merge proposals/<doc-id>
+
+# 6. Ask a natural-language question over the merged graph
+python scripts/ask.py "What does the DPA 2020 say about biometric data?" --show-sparql
+# → Claude writes SPARQL, Oxigraph executes, Claude summarises with citations
 ```
 
 ---
@@ -57,6 +61,7 @@ flowchart LR
         extractor["extractor.py\n(Docling → Haiku)"]
         to_turtle["to_turtle.py"]
         load["load_to_oxigraph.py"]
+        ask["ask.py\n(NL → SPARQL → answer)"]
     end
 
     subgraph vault["📂 vault/"]
@@ -88,6 +93,10 @@ flowchart LR
     schema --> load
     load --> triples
     triples --> sparql
+    triples --> ask
+    schema --> ask
+    ask -->|"NL question"| sonnet["☁️ Claude Sonnet\n(SPARQL synthesis + summary)"]
+    sonnet -->|"SPARQL"| ask
 ```
 
 ---
@@ -109,7 +118,8 @@ carib-comp-ont/
 │   ├── extractor.py           # PDF → Docling → Haiku → Markdown+YAML
 │   ├── curator.py             # inbox watcher → extractor → git PR
 │   ├── to_turtle.py           # vault/*.md → Turtle triples
-│   └── load_to_oxigraph.py    # Turtle → Oxigraph → SPARQL
+│   ├── load_to_oxigraph.py    # Turtle → Oxigraph → SPARQL
+│   └── ask.py                 # NL question → Sonnet SPARQL → answer
 ├── sparql/
 │   ├── cq1_obligations_on_controller.rq
 │   ├── cq2_regulators.rq
@@ -174,6 +184,31 @@ Eight entities manually extracted to validate the data shape before automation:
 
 ---
 
+## Natural-language QA
+
+Pre-written competency questions cover the foreseen queries. For ad-hoc
+questions, `scripts/ask.py` runs a three-step agent loop over the same graph:
+
+1. **Synthesise** — Claude Sonnet receives the schema, the live entity
+   catalog, and the existing CQs as few-shot, and emits one SPARQL query via
+   tool-use.
+2. **Execute** — the query runs against `schema/carib_compliance.ttl` +
+   `vault/vault.ttl` in pyoxigraph.
+3. **Summarise** — Claude turns the result rows into plain prose with
+   `[Label](vault/<entity>.md)` citations back to the reviewable Markdown.
+
+```bash
+python scripts/ask.py "Which obligations apply to a data controller?"
+python scripts/ask.py "What does the DPA 2020 say about biometric data?" --show-sparql
+python scripts/ask.py "List every defined term" --build-vault
+```
+
+`--show-sparql` prints the generated query and the raw result table — useful
+for the demo and for spotting when the model picked a brittle IRI match
+instead of a generalisable label-based one.
+
+---
+
 ## Demo script
 
 See [docs/demo_script.md](docs/demo_script.md) for the two-minute walk-through.
@@ -184,7 +219,7 @@ See [docs/demo_script.md](docs/demo_script.md) for the two-minute walk-through.
 
 **In scope (prototype):** DPA 2020 §1–§10, FIBO alignment for Regulator and
 Statute, single-shot Haiku extractor, minimal git-PR curator loop, Oxigraph
-SPARQL, CLI-only.
+SPARQL, NL → SPARQL QA agent (Sonnet), CLI-only.
 
 **Deliberately deferred:** Cybercrimes Act 2015, BOJ circulars, SHACL shapes,
 OWL 2 RL reasoning, Sonnet escalation, gold-standard annotation, web UI.
