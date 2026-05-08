@@ -34,5 +34,8 @@ Thumbs.db
 .idea/
 *.swp
 
-# Demo assets (large PDFs for recording — store separately)
-demo_assets/
+# Demo assets — track the folder, ignore the large binary files inside
+demo_assets/*.pdf
+demo_assets/*.PDF
+demo_assets/*.mp4
+demo_assets/*.mov
