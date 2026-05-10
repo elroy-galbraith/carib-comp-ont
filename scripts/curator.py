@@ -147,13 +147,29 @@ def commit_vault_files(repo: git.Repo, vault_files: list[Path],
     return commit_msg
 
 
-def archive_pdf(pdf_path: Path) -> None:
+def archive_pdf(pdf_path: Path) -> Path:
     SOURCES_DIR.mkdir(parents=True, exist_ok=True)
     dest = SOURCES_DIR / pdf_path.name
     if dest.exists():
         dest.unlink()
     shutil.move(str(pdf_path), dest)
-    log.info("archived %s → %s", pdf_path.name, dest)
+    log.info("archived %s -> %s", pdf_path.name, dest)
+    return dest
+
+
+def inject_highlights(archived_pdf: Path, doc_id: str) -> None:
+    """Run highlight.py on the archived PDF so vault notes' Source links land
+    on a page with the relevant passage already highlighted in yellow."""
+    try:
+        from highlight import highlight_pdf  # type: ignore
+    except ImportError as e:
+        log.warning("skipping highlight injection (pymupdf not installed?): %s", e)
+        return
+    try:
+        matched, unmatched = highlight_pdf(archived_pdf, VAULT_DIR, doc_id)
+        log.info("highlights: matched=%d unmatched=%d on %s", matched, unmatched, archived_pdf.name)
+    except Exception as e:
+        log.warning("highlight injection failed for %s: %s", archived_pdf.name, e)
 
 
 def process_pdf(pdf_path: Path) -> None:
@@ -170,7 +186,8 @@ def process_pdf(pdf_path: Path) -> None:
             log.warning("extractor produced no vault files for %s", doc_id)
             return
         commit_vault_files(repo, vault_files, doc_id, pdf_path)
-        archive_pdf(pdf_path)
+        archived = archive_pdf(pdf_path)
+        inject_highlights(archived, doc_id)
 
         log.info("=" * 50)
         log.info("PROPOSAL READY")

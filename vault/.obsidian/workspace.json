@@ -11,14 +11,12 @@
             "id": "d74e7c1e51168e8a",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "pdf",
               "state": {
-                "file": "dpa_2020_s6_commissioner.md",
-                "mode": "source",
-                "source": false
+                "file": "sources/dpa_2020_s6.pdf"
               },
-              "icon": "lucide-file",
-              "title": "dpa_2020_s6_commissioner"
+              "icon": "lucide-file-text",
+              "title": "dpa_2020_s6"
             }
           }
         ]
@@ -94,7 +92,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "dpa_2020_s6_commissioner.md",
+                "file": "sources/dpa_2020_s6.pdf",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +102,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for dpa_2020_s6_commissioner"
+              "title": "Backlinks for dpa_2020_s6"
             }
           },
           {
@@ -113,12 +111,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "dpa_2020_s6_commissioner.md",
+                "file": "sources/dpa_2020_s6.pdf",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from dpa_2020_s6_commissioner"
+              "title": "Outgoing links from dpa_2020_s6"
             }
           },
           {
@@ -156,13 +154,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "dpa_2020_s6_commissioner.md",
+                "file": "sources/dpa_2020_s6.pdf",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of dpa_2020_s6_commissioner"
+              "title": "Outline of dpa_2020_s6"
             }
           }
         ]
@@ -185,21 +183,23 @@
   },
   "active": "d74e7c1e51168e8a",
   "lastOpenFiles": [
+    "dpa_2020_s6_court.md",
     "sources/dpa_2020_s6.pdf",
+    "dpa_2020_s6_data_protection_standards.md",
+    "dpa_2020_s6_biometric_data.md",
+    "dpa_2020_s6_genetic_data.md",
+    "dpa_2020_s6_disclosure_to_data_subject_requirements.md",
+    "dpa2020.md",
     "dpa_2020_s6_commissioner.md",
     "dpa_2020_s6_good_practice.md",
     "sources",
     "dpa2020_ico.md",
-    "dpa_2020_s6_genetic_data.md",
     "dpa_2020_s6_health_professional.md",
-    "dpa2020.md",
     "dpa2020_s2_data_subject.md",
     "dpa2020_s2_data_processor.md",
     "dpa2020_s2_data_controller.md",
     "dpa2020_s2.md",
     "dpa2020_obligation_lawful_processing.md",
-    "dpa_2020_s6_biometric_data.md",
-    "dpa_2020_s6_court.md",
     "dpa_2020_s6.md",
     "dpa_2020_s6_data_processor.md",
     "dpa_2020_s6_data_protection_act_2020.md",
