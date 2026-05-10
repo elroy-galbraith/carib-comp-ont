@@ -59,13 +59,15 @@ logging.basicConfig(
 )
 log = logging.getLogger("curator")
 
-REPO_ROOT  = Path(__file__).parent.parent
-VAULT_DIR  = REPO_ROOT / "vault"
-INBOX_DIR  = REPO_ROOT / "inbox"
-EXTRACTOR  = REPO_ROOT / "scripts" / "extractor.py"
-DONE_DIR   = REPO_ROOT / "inbox" / "processed"
-PROMPT_VER = "extractor-v1"
-MODEL      = "claude-haiku-4-5-20251001"
+REPO_ROOT   = Path(__file__).parent.parent
+VAULT_DIR   = REPO_ROOT / "vault"
+INBOX_DIR   = REPO_ROOT / "inbox"
+EXTRACTOR   = REPO_ROOT / "scripts" / "extractor.py"
+# Archive processed PDFs inside the vault so the clickable "Source: [§X — page N]"
+# links in note bodies (vault/<doc>_*.md → sources/<doc>.pdf) resolve in Obsidian.
+SOURCES_DIR = REPO_ROOT / "vault" / "sources"
+PROMPT_VER  = "extractor-v1"
+MODEL       = "claude-haiku-4-5-20251001"
 
 
 # ── Core pipeline ─────────────────────────────────────────────────────────────
@@ -146,8 +148,10 @@ def commit_vault_files(repo: git.Repo, vault_files: list[Path],
 
 
 def archive_pdf(pdf_path: Path) -> None:
-    DONE_DIR.mkdir(parents=True, exist_ok=True)
-    dest = DONE_DIR / pdf_path.name
+    SOURCES_DIR.mkdir(parents=True, exist_ok=True)
+    dest = SOURCES_DIR / pdf_path.name
+    if dest.exists():
+        dest.unlink()
     shutil.move(str(pdf_path), dest)
     log.info("archived %s → %s", pdf_path.name, dest)
 

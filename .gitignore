@@ -14,7 +14,6 @@ vault/vault.ttl
 
 # Inbox PDFs — processing payloads; keep history clean
 inbox/*.pdf
-inbox/processed/
 
 # Environment / secrets — never commit credentials
 .env
