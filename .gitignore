@@ -40,5 +40,10 @@ demo_assets/*.PDF
 demo_assets/*.mp4
 demo_assets/*.mov
 
+# Vault source PDFs — staged inside the vault so Obsidian can link to them
+# at vault/sources/<doc>.pdf#page=N. Large; don't track in git.
+vault/sources/*.pdf
+vault/sources/*.PDF
+
 # Held-out corpus — evaluation integrity; PDF must never be committed
 held-out/

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "dpa2020_obligation_lawful_processing.md",
+                "file": "dpa_2020_s6_good_practice.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "dpa2020_obligation_lawful_processing"
+              "title": "dpa_2020_s6_good_practice"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "dpa2020_obligation_lawful_processing.md",
+                "file": "dpa_2020_s6_good_practice.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for dpa2020_obligation_lawful_processing"
+              "title": "Backlinks for dpa_2020_s6_good_practice"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "dpa2020_obligation_lawful_processing.md",
+                "file": "dpa_2020_s6_good_practice.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from dpa2020_obligation_lawful_processing"
+              "title": "Outgoing links from dpa_2020_s6_good_practice"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "dpa2020_obligation_lawful_processing.md",
+                "file": "dpa_2020_s6_good_practice.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of dpa2020_obligation_lawful_processing"
+              "title": "Outline of dpa_2020_s6_good_practice"
             }
           }
         ]
@@ -185,16 +185,24 @@
   },
   "active": "d74e7c1e51168e8a",
   "lastOpenFiles": [
+    "sources/dpa_2020_s6.pdf",
+    "dpa_2020_s6_good_practice.md",
+    "sources",
     "dpa2020_ico.md",
+    "dpa_2020_s6_genetic_data.md",
+    "dpa_2020_s6_health_professional.md",
     "dpa2020.md",
+    "dpa2020_s2_data_subject.md",
+    "dpa2020_s2_data_processor.md",
+    "dpa2020_s2_data_controller.md",
+    "dpa2020_s2.md",
+    "dpa2020_obligation_lawful_processing.md",
+    "dpa_2020_s6_biometric_data.md",
     "dpa_2020_s6_court.md",
     "dpa_2020_s6_commissioner.md",
-    "dpa_2020_s6_biometric_data.md",
     "dpa_2020_s6.md",
-    "dpa2020_s2.md",
     "dpa_2020_s6_data_processor.md",
     "dpa_2020_s6_data_protection_act_2020.md",
-    "dpa_2020_s6_data_controller.md",
-    "dpa2020_s2_data_processor.md"
+    "dpa_2020_s6_data_controller.md"
   ]
 }

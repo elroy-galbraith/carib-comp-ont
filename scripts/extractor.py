@@ -46,6 +46,10 @@ except ImportError:
 
 VAULT_DIR = Path(__file__).parent.parent / "vault"
 MODEL = "claude-haiku-4-5-20251001"
+# Relative path (from a vault/*.md file) to the directory holding source PDFs.
+# Must resolve inside the Obsidian vault so clicking the link opens the PDF
+# in Obsidian's built-in viewer at the given #page=N anchor.
+PDF_LINK_BASE = "sources"
 
 # ── JSON Schema that mirrors the OWL class structure ─────────────────────────
 
@@ -126,43 +130,112 @@ FEW_SHOT = dedent("""\
 
 # ── Text extraction ───────────────────────────────────────────────────────────
 
-def extract_text_docling(pdf_path: Path) -> str:
+def extract_text_docling(pdf_path: Path) -> tuple[str, dict[int, str]]:
+    """Returns (flat_markdown_for_llm, {page_no: page_text}) using docling.
+
+    The page map enables clickable "page N" provenance links.
+    """
     from docling.document_converter import DocumentConverter  # type: ignore
     converter = DocumentConverter()
     result = converter.convert(str(pdf_path))
-    return result.document.export_to_markdown()
+    doc = result.document
+    pages: dict[int, list[str]] = {}
+    for item, _level in doc.iterate_items():
+        text = (getattr(item, "text", "") or "").strip()
+        if not text:
+            continue
+        prov = getattr(item, "prov", None)
+        if not prov:
+            continue
+        page_no = prov[0].page_no
+        pages.setdefault(page_no, []).append(text)
+    page_texts = {p: "\n".join(parts) for p, parts in pages.items()}
+    flat = doc.export_to_markdown()
+    return flat, page_texts
 
 
-def extract_text_pdfplumber(pdf_path: Path) -> str:
+def extract_text_pdfplumber(pdf_path: Path) -> tuple[str, dict[int, str]]:
+    """Returns (flat_text, {page_no: page_text}) using pdfplumber."""
     import pdfplumber  # type: ignore
-    pages = []
+    page_texts: dict[int, str] = {}
     with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
+        for i, page in enumerate(pdf.pages, start=1):
             text = page.extract_text()
             if text:
-                pages.append(text)
-    return "\n\n".join(pages)
+                page_texts[i] = text
+    flat = "\n\n".join(page_texts[p] for p in sorted(page_texts))
+    return flat, page_texts
 
 
-def extract_text(pdf_path: Path) -> str:
+def extract_text(pdf_path: Path) -> tuple[str, dict[int, str]]:
     try:
-        text = extract_text_docling(pdf_path)
-        print(f"[extractor] text extracted via docling ({len(text)} chars)", file=sys.stderr)
-        return text
+        flat, pages = extract_text_docling(pdf_path)
+        print(f"[extractor] text extracted via docling ({len(flat)} chars, {len(pages)} pages)", file=sys.stderr)
+        return flat, pages
     except ImportError:
         pass
     except Exception as e:
         print(f"[extractor] docling failed ({e}), trying pdfplumber…", file=sys.stderr)
 
     try:
-        text = extract_text_pdfplumber(pdf_path)
-        print(f"[extractor] text extracted via pdfplumber ({len(text)} chars)", file=sys.stderr)
-        return text
+        flat, pages = extract_text_pdfplumber(pdf_path)
+        print(f"[extractor] text extracted via pdfplumber ({len(flat)} chars, {len(pages)} pages)", file=sys.stderr)
+        return flat, pages
     except ImportError:
         pass
 
     print("ERROR: no PDF extractor available. Install docling or pdfplumber.", file=sys.stderr)
     sys.exit(1)
+
+
+def _normalize_for_match(text: str) -> str:
+    """Lowercase, collapse whitespace, and strip quote characters and punctuation
+    that commonly differ between PDF OCR output and statutory text snippets."""
+    text = text.lower()
+    # Map curly/typographic quotes to nothing — robust to OCR variation
+    text = re.sub(r"[‘’“”`'\"]+", "", text)
+    # Collapse all whitespace and most punctuation
+    text = re.sub(r"[\s\-–—.,;:()]+", " ", text)
+    return text.strip()
+
+
+def find_page_for_text(source_text: str, page_texts: dict[int, str]) -> int | None:
+    """Locate which PDF page a source_text snippet came from.
+
+    Two-stage match:
+    1. Try exact substring of the first 80 / 60 normalized chars on each page.
+    2. Fall back to longest-consecutive-word-overlap scoring — disambiguates
+       TOC references (which only repeat the term name) from the actual
+       definition body (which continues with definitional language).
+    """
+    if not source_text or not page_texts:
+        return None
+    needle_full = _normalize_for_match(source_text)
+    needle_words = needle_full.split()
+    if len(needle_words) < 5:
+        return None
+    normalized_pages = {p: _normalize_for_match(t) for p, t in page_texts.items()}
+
+    # Stage 1: exact substring on a long-enough prefix
+    for length in (80, 60):
+        needle = needle_full[:length]
+        for page_no in sorted(normalized_pages):
+            if needle in normalized_pages[page_no]:
+                return page_no
+
+    # Stage 2: longest-n-gram-prefix score (5..15 words). Picks the page where
+    # the most consecutive prefix-words of the source text appear together.
+    best_page, best_score = None, 0
+    for page_no in sorted(normalized_pages):
+        haystack = normalized_pages[page_no]
+        for n in range(min(15, len(needle_words)), 4, -1):
+            chunk = " ".join(needle_words[:n])
+            if chunk in haystack:
+                if n > best_score:
+                    best_score = n
+                    best_page = page_no
+                break
+    return best_page
 
 
 # ── Haiku API call ────────────────────────────────────────────────────────────
@@ -218,6 +291,7 @@ def entity_to_markdown(entity: dict, doc_id: str, prompt_version: str, model_sna
     cls = entity["class"]
     source_section = entity.get("source_section", "")
     source_text = entity.get("source_text", "")
+    source_page = entity.get("source_page")
     raw_properties = entity.get("properties") or {}
     # Wrap property values in Obsidian wikilink syntax so Properties become graph edges.
     # to_turtle.py strips the brackets when emitting RDF.
@@ -233,20 +307,31 @@ def entity_to_markdown(entity: dict, doc_id: str, prompt_version: str, model_sna
         "uri":             f"https://ontology.carib-comp.org/compliance/entity/{eid}",
         "source_document": doc_id,
         "source_section":  source_section,
+        "source_page":     source_page,
         "source_text":     source_text,
         "properties":      properties,
         "prompt_version":  prompt_version,
         "model_snapshot":  model_snapshot,
         "validation":      "PENDING",
     }
+    if source_page is None:
+        meta.pop("source_page")
 
     frontmatter = yaml.dump(meta, allow_unicode=True, default_flow_style=False, sort_keys=False)
+
+    if source_page:
+        source_line = (
+            f"**Source:** [{source_section} — page {source_page}]"
+            f"({PDF_LINK_BASE}/{doc_id}.pdf#page={source_page})"
+        )
+    else:
+        source_line = f"**Source:** {source_section} — {doc_id}"
 
     body = dedent(f"""\
         ## {label}
 
         **Class:** `cco:{cls}`
-        **Source:** {source_section} — {doc_id}
+        {source_line}
 
         > {source_text}
 
@@ -290,6 +375,7 @@ def main() -> None:
                         help="Print extracted JSON without writing files.")
     args = parser.parse_args()
 
+    page_texts: dict[int, str] = {}
     if args.text:
         text = args.text
         doc_id = args.doc_id or "unknown_doc"
@@ -298,12 +384,22 @@ def main() -> None:
         if not pdf_path.exists():
             print(f"ERROR: file not found: {pdf_path}", file=sys.stderr)
             sys.exit(1)
-        text = extract_text(pdf_path)
+        text, page_texts = extract_text(pdf_path)
         doc_id = args.doc_id or pdf_path.stem.lower().replace("-", "_").replace(" ", "_")
 
     print(f"[extractor] calling {MODEL} (doc_id={doc_id}) …")
     entities = call_haiku(text, doc_id, args.prompt_version)
     print(f"[extractor] {len(entities)} entities extracted")
+
+    # Backfill source_page by locating each entity's source_text in the page map
+    if page_texts:
+        matched = 0
+        for entity in entities:
+            page = find_page_for_text(entity.get("source_text", ""), page_texts)
+            if page is not None:
+                entity["source_page"] = page
+                matched += 1
+        print(f"[extractor] source_page resolved for {matched}/{len(entities)} entities", file=sys.stderr)
 
     if args.dry_run:
         print(json.dumps({"entities": entities}, indent=2, ensure_ascii=False))

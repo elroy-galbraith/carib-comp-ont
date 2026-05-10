@@ -5,6 +5,7 @@ label: Disclosure to Data Subject Requirements
 uri: https://ontology.carib-comp.org/compliance/entity/dpa_2020_s6_disclosure_to_data_subject_requirements
 source_document: dpa_2020_s6
 source_section: §2(1)
+source_page: 7
 source_text: '''disclosure to data subject requirements'' means the information mentioned
   in section 22(6) required to be given to a data subject under section 22(4) and
   the provisions of section 6'
@@ -19,7 +20,7 @@ validation: PENDING
 ## Disclosure to Data Subject Requirements
 
 **Class:** `cco:Definition`
-**Source:** §2(1) — dpa_2020_s6
+**Source:** [§2(1) — page 7](sources/dpa_2020_s6.pdf#page=7)
 
 > 'disclosure to data subject requirements' means the information mentioned in section 22(6) required to be given to a data subject under section 22(4) and the provisions of section 6
 

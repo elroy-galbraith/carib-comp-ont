@@ -5,6 +5,7 @@ label: Data Protection Standards
 uri: https://ontology.carib-comp.org/compliance/entity/dpa_2020_s6_data_protection_standards
 source_document: dpa_2020_s6
 source_section: §2(1)
+source_page: 7
 source_text: '''data protection standards'' means the data protection standards as
   set out in sections 22 to 31, and reference to any of those standards by number
   means the standard as numbered in any of those sections'
@@ -19,7 +20,7 @@ validation: PENDING
 ## Data Protection Standards
 
 **Class:** `cco:Definition`
-**Source:** §2(1) — dpa_2020_s6
+**Source:** [§2(1) — page 7](sources/dpa_2020_s6.pdf#page=7)
 
 > 'data protection standards' means the data protection standards as set out in sections 22 to 31, and reference to any of those standards by number means the standard as numbered in any of those sections
 

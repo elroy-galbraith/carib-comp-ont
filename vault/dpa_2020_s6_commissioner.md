@@ -5,6 +5,7 @@ label: Commissioner
 uri: https://ontology.carib-comp.org/compliance/entity/dpa_2020_s6_commissioner
 source_document: dpa_2020_s6
 source_section: §2(1)
+source_page: 6
 source_text: '''Commissioner'' means the office of Information Commissioner established
   by section 4'
 properties:
@@ -18,7 +19,7 @@ validation: PENDING
 ## Commissioner
 
 **Class:** `cco:Definition`
-**Source:** §2(1) — dpa_2020_s6
+**Source:** [§2(1) — page 6](sources/dpa_2020_s6.pdf#page=6)
 
 > 'Commissioner' means the office of Information Commissioner established by section 4
 

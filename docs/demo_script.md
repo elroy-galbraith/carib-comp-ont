@@ -13,7 +13,7 @@
 - [ ] `python scripts/to_turtle.py` run — `vault/vault.ttl` exists
 - [ ] `python scripts/ask.py "test"` smoke-checked once (warms up dependencies)
 - [ ] `git status` is clean on `main`
-- [ ] A DPA 2020 PDF page (e.g. §6) copied to `demo_assets/dpa_2020_s6.pdf`
+- [ ] A DPA 2020 PDF page (e.g. §6) copied to `vault/sources/dpa_2020_s6.pdf` (in-vault so the clickable provenance links in note bodies resolve to Obsidian's PDF viewer)
 - [ ] Terminal font size ≥ 18pt, window maximised
 
 ---
@@ -34,7 +34,7 @@ Open an empty `inbox/` in the file explorer alongside a terminal.
 ### 00:15–00:35 — Drop the PDF
 
 ```bash
-cp demo_assets/dpa_2020_s6.pdf inbox/
+cp vault/sources/dpa_2020_s6.pdf inbox/
 python scripts/curator.py --once
 ```
 
