@@ -32,8 +32,16 @@ except ImportError:
 
 REPO_ROOT = Path(__file__).parent.parent
 DEFAULT_VAULT = REPO_ROOT / "vault"
+
+# Pack-driven configuration. The legal-definition term-name regex below stays
+# in place for Phase A; in Phase B it moves to the compliance pack's hooks.py.
+sys.path.insert(0, str(REPO_ROOT))
+from kgforge.pack import load_builtin  # noqa: E402
+
+_PACK = load_builtin("compliance")
+
 # Tag we set on every annotation we create — used for idempotent re-runs.
-ANNOT_TITLE = "cco:provenance"
+ANNOT_TITLE = f"{_PACK.prefix}:provenance"
 # Soft yellow (RGB 0-1) for the highlight stroke.
 HIGHLIGHT_COLOR = (1.0, 0.95, 0.4)
 

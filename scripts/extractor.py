@@ -44,88 +44,84 @@ except ImportError:
     print("ERROR: anthropic not installed. Run: pip install anthropic", file=sys.stderr)
     sys.exit(1)
 
+# Pack-driven configuration. The compliance pack mirrors the previously
+# hardcoded values; future use cases swap to a different pack (see
+# kgforge/pack/builtin/).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from kgforge.pack import load_builtin  # noqa: E402
+
+_PACK = load_builtin("compliance")
+
 VAULT_DIR = Path(__file__).parent.parent / "vault"
-MODEL = "claude-haiku-4-5-20251001"
+MODEL = _PACK.models.extractor
 # Relative path (from a vault/*.md file) to the directory holding source PDFs.
 # Must resolve inside the Obsidian vault so clicking the link opens the PDF
 # in Obsidian's built-in viewer at the given #page=N anchor.
 PDF_LINK_BASE = "sources"
 
-# ── JSON Schema that mirrors the OWL class structure ─────────────────────────
+# ── JSON Schema, derived from the pack's class + property definitions ────────
 
-ENTITY_SCHEMA: dict = {
-    "type": "object",
-    "properties": {
-        "entities": {
-            "type": "array",
-            "description": "All legal entities extracted from the text.",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "class": {
-                        "type": "string",
-                        "enum": ["Statute", "Provision", "Definition", "Regulator", "Obligation"],
-                        "description": "OWL class this entity belongs to."
-                    },
-                    "id": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-z0-9_]*$",
-                        "description": "Snake-case identifier, prefixed with doc_id."
-                    },
-                    "label": {
-                        "type": "string",
-                        "description": "Human-readable name."
-                    },
-                    "source_section": {
-                        "type": "string",
-                        "description": "Section reference, e.g. §6 or §2(1)(a)."
-                    },
-                    "source_text": {
-                        "type": "string",
-                        "description": "Verbatim statutory text being encoded (max ~300 chars)."
-                    },
-                    "properties": {
-                        "type": "object",
-                        "description": "Ontology property values (entity IDs, not labels).",
-                        "properties": {
-                            "definedIn":           {"type": "string"},
-                            "enforcedBy":          {"type": "string"},
-                            "imposesObligationOn": {"type": "string"},
-                            "applicableTo":        {"type": "string"},
-                            "relatedTo":           {"type": "string"},
-                        },
-                        "additionalProperties": False
-                    }
-                },
-                "required": ["class", "id", "label", "source_section", "source_text"],
-                "additionalProperties": False
-            }
-        }
-    },
-    "required": ["entities"],
-    "additionalProperties": False
-}
+def _build_entity_schema() -> dict:
+    """Construct the tool-use input schema from _PACK.
 
-FEW_SHOT = dedent("""\
-    EXAMPLE INPUT (§2 of a data-protection statute):
-    "data controller" means a person who determines the purposes for which
-    and the manner in which any personal data are processed.
-
-    EXAMPLE OUTPUT:
-    {
-      "entities": [
-        {
-          "class": "Definition",
-          "id": "dpa2020_s2_data_controller",
-          "label": "Data Controller",
-          "source_section": "§2",
-          "source_text": "\\"data controller\\" means a person who determines the purposes for which and the manner in which any personal data are processed.",
-          "properties": { "definedIn": "dpa2020_s2" }
-        }
-      ]
+    The legacy schema only exposed the 5 object properties to the LLM (no
+    partOfStatute), so we mirror that filter to keep prompts byte-identical.
+    """
+    object_props = {
+        p.name: {"type": "string"}
+        for p in _PACK.properties
+        if p.name != "partOfStatute"
     }
-    ---
-""")
+    return {
+        "type": "object",
+        "properties": {
+            "entities": {
+                "type": "array",
+                "description": "All legal entities extracted from the text.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "class": {
+                            "type": "string",
+                            "enum": _PACK.class_names,
+                            "description": "OWL class this entity belongs to.",
+                        },
+                        "id": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]*$",
+                            "description": "Snake-case identifier, prefixed with doc_id.",
+                        },
+                        "label": {
+                            "type": "string",
+                            "description": "Human-readable name.",
+                        },
+                        "source_section": {
+                            "type": "string",
+                            "description": "Section reference, e.g. §6 or §2(1)(a).",
+                        },
+                        "source_text": {
+                            "type": "string",
+                            "description": "Verbatim statutory text being encoded (max ~300 chars).",
+                        },
+                        "properties": {
+                            "type": "object",
+                            "description": "Ontology property values (entity IDs, not labels).",
+                            "properties": object_props,
+                            "additionalProperties": False,
+                        },
+                    },
+                    "required": ["class", "id", "label", "source_section", "source_text"],
+                    "additionalProperties": False,
+                },
+            }
+        },
+        "required": ["entities"],
+        "additionalProperties": False,
+    }
+
+
+ENTITY_SCHEMA: dict = _build_entity_schema()
+FEW_SHOT = _PACK.prompt.few_shot
 
 
 # ── Text extraction ───────────────────────────────────────────────────────────
@@ -243,26 +239,13 @@ def find_page_for_text(source_text: str, page_texts: dict[int, str]) -> int | No
 def call_haiku(text: str, doc_id: str, prompt_version: str) -> list[dict]:
     client = anthropic.Anthropic()
 
-    system = dedent(f"""\
-        You are a legal knowledge-engineering assistant. Extract ontology entities
-        from Caribbean statutory text. Use only the five OWL classes:
-        Statute, Provision, Definition, Regulator, Obligation.
-        Always prefix entity IDs with the document ID ({doc_id}_).
-        Be conservative: only extract entities explicitly stated in the text.
-    """)
-
-    user = dedent(f"""\
-        {FEW_SHOT}
-        Document ID: {doc_id}
-        Prompt version: {prompt_version}
-
-        Extract all ontology entities from the following statutory text.
-        Use the extract_entities tool.
-
-        ---
-        {text[:8000]}
-        ---
-    """)
+    system = _PACK.prompt.system.format(doc_id=doc_id)
+    user = _PACK.prompt.user.format(
+        few_shot=FEW_SHOT,
+        doc_id=doc_id,
+        prompt_version=prompt_version,
+        text_window=text[: _PACK.prompt.text_window_chars],
+    )
 
     response = client.messages.create(
         model=MODEL,
@@ -304,7 +287,7 @@ def entity_to_markdown(entity: dict, doc_id: str, prompt_version: str, model_sna
         "class":           cls,
         "id":              eid,
         "label":           label,
-        "uri":             f"https://ontology.carib-comp.org/compliance/entity/{eid}",
+        "uri":             f"{_PACK.entity_iri}{eid}",
         "source_document": doc_id,
         "source_section":  source_section,
         "source_page":     source_page,
@@ -332,7 +315,7 @@ def entity_to_markdown(entity: dict, doc_id: str, prompt_version: str, model_sna
     body = dedent(f"""\
         ## {label}
 
-        **Class:** `cco:{cls}`
+        **Class:** `{_PACK.prefix}:{cls}`
         {source_line}
 
         > {source_text}

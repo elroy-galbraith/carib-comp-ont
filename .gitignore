@@ -46,3 +46,8 @@ vault/sources/*.PDF
 
 # Held-out corpus — evaluation integrity; PDF must never be committed
 held-out/
+
+# Phase A regression-test scratch — captured pre/post baselines for diffing
+baselines/
+baselines_pre/
+baselines_post/
