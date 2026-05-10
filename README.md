@@ -131,6 +131,7 @@ carib-comp-ont/
 │   └── outreach/
 │       ├── one_pager.md
 │       └── email_draft.md
+├── HELD_OUT.md                # Evaluation corpus quarantine policy
 ├── requirements.txt
 └── README.md
 ```
@@ -215,6 +216,24 @@ See [docs/demo_script.md](docs/demo_script.md) for the two-minute walk-through.
 
 ---
 
+## Extending the ontology
+
+**Add a new jurisdiction** — drop the statute PDF into `inbox/`, run
+`python scripts/curator.py --once`, review the proposed branch, and merge.
+The curator adds new vault files but never edits existing ones; conflicts stay
+human-resolvable.
+
+**Add a new class or property** — edit `schema/carib_compliance.ttl` directly.
+Keep FIBO alignment where a matching concept exists; add a comment citing the
+source section if you introduce a new term. Re-run `to_turtle.py` and
+`load_to_oxigraph.py` to verify the graph still answers all three CQs.
+
+**Add a competency question** — write a `.rq` file in `sparql/` and add a row
+to the CQ table above. A passing CQ is the acceptance criterion for any schema
+change.
+
+---
+
 ## Scope
 
 **In scope (prototype):** DPA 2020 §1–§10, FIBO alignment for Regulator and
@@ -236,6 +255,13 @@ This prototype is informed by and complementary to:
 The cybercrime and privacy-compliance domains intersect at incident-response
 obligations and data-breach definitions. Alignment between these ontologies
 is a planned Phase 2 activity; we welcome feedback from the original authors.
+
+---
+
+## See also
+
+- [docs/outreach/one_pager.md](docs/outreach/one_pager.md) — one-page project summary for outreach and paper submissions
+- [HELD_OUT.md](HELD_OUT.md) — evaluation corpus quarantine policy (M0)
 
 ---
 

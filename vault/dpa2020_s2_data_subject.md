@@ -3,13 +3,14 @@ class: Definition
 id: dpa2020_s2_data_subject
 label: Data Subject
 uri: https://ontology.carib-comp.org/compliance/entity/dpa2020_s2_data_subject
-source_statute: dpa2020
+source_document: dpa2020
 source_section: "§2"
 source_text: >
   "data subject" means an individual who is the subject of personal data.
 properties:
-  definedIn: dpa2020_s2
-  relatedTo: dpa2020_s2_personal_data
+  definedIn: "[[dpa2020_s2]]"
+  relatedTo: "[[dpa2020_s2_personal_data]]"
+  partOfStatute: "[[dpa2020]]"
 prompt_version: manual-v1
 model_snapshot: hand-curated
 validation: PASS

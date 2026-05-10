@@ -3,13 +3,14 @@ class: Regulator
 id: dpa2020_ico
 label: Information Commissioner (Jamaica)
 uri: https://ontology.carib-comp.org/compliance/entity/dpa2020_ico
-source_statute: dpa2020
+source_document: dpa2020
 source_section: "§5"
 source_text: >
   There shall be an Information Commissioner who shall be appointed by the
   Governor-General on the advice of the Prime Minister after consultation with
   the Leader of the Opposition.
-properties: {}
+properties:
+  partOfStatute: "[[dpa2020]]"
 prompt_version: manual-v1
 model_snapshot: hand-curated
 validation: PASS

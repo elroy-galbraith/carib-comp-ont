@@ -37,6 +37,7 @@ PROP_MAP = {
     "imposesObligationOn":  "cco:imposesObligationOn",
     "applicableTo":         "cco:applicableTo",
     "relatedTo":            "cco:relatedTo",
+    "partOfStatute":        "dcterms:isPartOf",
 }
 
 
@@ -54,6 +55,12 @@ def _parse_frontmatter(path: Path) -> dict | None:
     return yaml.safe_load(m.group(1))
 
 
+def _strip_wikilink(value) -> str:
+    """Strip Obsidian wikilink brackets if present: '[[id]]' -> 'id'."""
+    m = re.match(r"^\[\[(.+?)\]\]$", str(value).strip())
+    return m.group(1) if m else str(value).strip()
+
+
 def entity_to_triples(meta: dict) -> list[str]:
     eid = meta.get("id", "")
     if not eid:
@@ -63,7 +70,6 @@ def entity_to_triples(meta: dict) -> list[str]:
     label = meta.get("label", eid)
     source_text = meta.get("source_text", "")
     source_section = meta.get("source_section", "")
-    source_statute = meta.get("source_statute", "")
     properties = meta.get("properties", {}) or {}
 
     subject = f"ccoe:{eid}"
@@ -87,15 +93,14 @@ def entity_to_triples(meta: dict) -> list[str]:
     if source_section:
         lines.append(f'    dcterms:source "{_ttl_str(source_section)}" ;')
 
-    # dcterms:isPartOf — parent statute
-    if source_statute and source_statute != eid:
-        lines.append(f"    dcterms:isPartOf ccoe:{source_statute} ;")
-
-    # ontology properties
+    # ontology properties (partOfStatute → dcterms:isPartOf is in PROP_MAP)
     for prop_key, prop_iri in PROP_MAP.items():
         value = properties.get(prop_key)
         if value:
-            lines.append(f"    {prop_iri} ccoe:{value} ;")
+            target = _strip_wikilink(value)
+            if target == eid:
+                continue  # skip self-references
+            lines.append(f"    {prop_iri} ccoe:{target} ;")
 
     # close the triple set
     last = lines[-1]

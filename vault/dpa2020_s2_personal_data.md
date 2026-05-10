@@ -3,7 +3,7 @@ class: Definition
 id: dpa2020_s2_personal_data
 label: Personal Data
 uri: https://ontology.carib-comp.org/compliance/entity/dpa2020_s2_personal_data
-source_statute: dpa2020
+source_document: dpa2020
 source_section: "§2"
 source_text: >
   "personal data" means data which relates to a living individual who can be
@@ -13,8 +13,9 @@ source_text: >
   any indication of the intentions of the data controller or any other person
   in respect of the individual.
 properties:
-  definedIn: dpa2020_s2
-  relatedTo: dpa2020_s2_data_subject
+  definedIn: "[[dpa2020_s2]]"
+  relatedTo: "[[dpa2020_s2_data_subject]]"
+  partOfStatute: "[[dpa2020]]"
 prompt_version: manual-v1
 model_snapshot: hand-curated
 validation: PASS

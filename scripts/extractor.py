@@ -218,20 +218,26 @@ def entity_to_markdown(entity: dict, doc_id: str, prompt_version: str, model_sna
     cls = entity["class"]
     source_section = entity.get("source_section", "")
     source_text = entity.get("source_text", "")
-    properties = entity.get("properties") or {}
+    raw_properties = entity.get("properties") or {}
+    # Wrap property values in Obsidian wikilink syntax so Properties become graph edges.
+    # to_turtle.py strips the brackets when emitting RDF.
+    properties = {
+        k: (v if (isinstance(v, str) and v.startswith("[[")) else f"[[{v}]]")
+        for k, v in raw_properties.items() if v
+    }
 
     meta = {
-        "class":          cls,
-        "id":             eid,
-        "label":          label,
-        "uri":            f"https://ontology.carib-comp.org/compliance/entity/{eid}",
-        "source_statute": doc_id,
-        "source_section": source_section,
-        "source_text":    source_text,
-        "properties":     properties,
-        "prompt_version": prompt_version,
-        "model_snapshot": model_snapshot,
-        "validation":     "PENDING",
+        "class":           cls,
+        "id":              eid,
+        "label":           label,
+        "uri":             f"https://ontology.carib-comp.org/compliance/entity/{eid}",
+        "source_document": doc_id,
+        "source_section":  source_section,
+        "source_text":     source_text,
+        "properties":      properties,
+        "prompt_version":  prompt_version,
+        "model_snapshot":  model_snapshot,
+        "validation":      "PENDING",
     }
 
     frontmatter = yaml.dump(meta, allow_unicode=True, default_flow_style=False, sort_keys=False)

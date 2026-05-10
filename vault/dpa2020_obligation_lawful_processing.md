@@ -3,15 +3,15 @@ class: Obligation
 id: dpa2020_obligation_lawful_processing
 label: Obligation to Process Personal Data Lawfully
 uri: https://ontology.carib-comp.org/compliance/entity/dpa2020_obligation_lawful_processing
-source_statute: dpa2020
+source_document: dpa2020
 source_section: "§10"
 source_text: >
   A data controller shall ensure that personal data are processed in accordance
   with the data protection principles set out in the First Schedule.
 properties:
-  imposesObligationOn: dpa2020_s2_data_controller
-  applicableTo: dpa2020_s2_personal_data
-  relatedTo: dpa2020
+  imposesObligationOn: "[[dpa2020_s2_data_controller]]"
+  applicableTo: "[[dpa2020_s2_personal_data]]"
+  partOfStatute: "[[dpa2020]]"
 prompt_version: manual-v1
 model_snapshot: hand-curated
 validation: PASS

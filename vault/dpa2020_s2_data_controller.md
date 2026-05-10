@@ -3,7 +3,7 @@ class: Definition
 id: dpa2020_s2_data_controller
 label: Data Controller
 uri: https://ontology.carib-comp.org/compliance/entity/dpa2020_s2_data_controller
-source_statute: dpa2020
+source_document: dpa2020
 source_section: "§2"
 source_text: >
   "data controller" means a person who (either alone or jointly or in common
@@ -13,8 +13,9 @@ source_text: >
   family or household affairs, that individual is not to be regarded as a data
   controller.
 properties:
-  definedIn: dpa2020_s2
-  relatedTo: dpa2020_s2_data_processor
+  definedIn: "[[dpa2020_s2]]"
+  relatedTo: "[[dpa2020_s2_data_processor]]"
+  partOfStatute: "[[dpa2020]]"
 prompt_version: manual-v1
 model_snapshot: hand-curated
 validation: PASS
