@@ -13,10 +13,10 @@
             "state": {
               "type": "pdf",
               "state": {
-                "file": "sources/dpa_2020_s6.pdf"
+                "file": "sources/dpa_2020_s6_data_controller_representative.pdf"
               },
               "icon": "lucide-file-text",
-              "title": "dpa_2020_s6"
+              "title": "dpa_2020_s6_data_controller_representative"
             }
           }
         ]
@@ -92,7 +92,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "sources/dpa_2020_s6.pdf",
+                "file": "sources/dpa_2020_s6_data_controller_representative.pdf",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +102,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for dpa_2020_s6"
+              "title": "Backlinks for dpa_2020_s6_data_controller_representative"
             }
           },
           {
@@ -111,12 +111,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "sources/dpa_2020_s6.pdf",
+                "file": "sources/dpa_2020_s6_data_controller_representative.pdf",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from dpa_2020_s6"
+              "title": "Outgoing links from dpa_2020_s6_data_controller_representative"
             }
           },
           {
@@ -154,13 +154,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "sources/dpa_2020_s6.pdf",
+                "file": "sources/dpa_2020_s6_data_controller_representative.pdf",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of dpa_2020_s6"
+              "title": "Outline of dpa_2020_s6_data_controller_representative"
             }
           }
         ]
@@ -183,16 +183,25 @@
   },
   "active": "d74e7c1e51168e8a",
   "lastOpenFiles": [
-    "dpa_2020_s6_court.md",
+    "dpa_2020_s6_data_controller_representative.md",
+    "sources/dpa_2020_s6_genetic_data.pdf",
+    "dpa_2020_s6_genetic_data.md",
     "sources/dpa_2020_s6.pdf",
+    "sources/dpa_2020_s6_health_professional.pdf",
+    "sources/dpa_2020_s6_good_practice.pdf",
+    "sources/dpa_2020_s6_disclosure_to_data_subject_requirements.pdf",
+    "sources/dpa_2020_s6_data_protection_standards.pdf",
+    "sources/dpa_2020_s6_data_controller_representative.pdf",
+    "sources/dpa_2020_s6_court.pdf",
+    "sources/dpa_2020_s6_commissioner.pdf",
+    "sources/dpa_2020_s6_biometric_data.pdf",
+    "dpa_2020_s6_court.md",
     "dpa_2020_s6_data_protection_standards.md",
     "dpa_2020_s6_biometric_data.md",
-    "dpa_2020_s6_genetic_data.md",
     "dpa_2020_s6_disclosure_to_data_subject_requirements.md",
     "dpa2020.md",
     "dpa_2020_s6_commissioner.md",
     "dpa_2020_s6_good_practice.md",
-    "sources",
     "dpa2020_ico.md",
     "dpa_2020_s6_health_professional.md",
     "dpa2020_s2_data_subject.md",

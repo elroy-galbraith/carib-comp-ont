@@ -320,9 +320,11 @@ def entity_to_markdown(entity: dict, doc_id: str, prompt_version: str, model_sna
     frontmatter = yaml.dump(meta, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
     if source_page:
+        # Per-entity PDF: one highlighted passage per file so the reader sees
+        # only the relevant snippet, not every entity's highlight on the page.
         source_line = (
             f"**Source:** [{source_section} — page {source_page}]"
-            f"({PDF_LINK_BASE}/{doc_id}.pdf#page={source_page})"
+            f"({PDF_LINK_BASE}/{eid}.pdf#page={source_page})"
         )
     else:
         source_line = f"**Source:** {source_section} — {doc_id}"

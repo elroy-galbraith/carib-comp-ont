@@ -19,7 +19,7 @@ validation: PENDING
 ## Data Controller Representative
 
 **Class:** `cco:Definition`
-**Source:** [§2(1) — page 6](sources/dpa_2020_s6.pdf#page=6)
+**Source:** [§2(1) — page 6](sources/dpa_2020_s6_data_controller_representative.pdf#page=6)
 
 > 'data controller representative' means a person or other entity appointed for the purposes of section 3(2)
 

@@ -18,7 +18,7 @@ validation: PENDING
 ## Genetic Data
 
 **Class:** `cco:Definition`
-**Source:** [§2(1) — page 7](sources/dpa_2020_s6.pdf#page=7)
+**Source:** [§2(1) — page 7](sources/dpa_2020_s6_genetic_data.pdf#page=7)
 
 > 'genetic data' means DNA as defined by the DNA Evidence Act, 2016
 

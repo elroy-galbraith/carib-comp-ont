@@ -134,6 +134,7 @@ def _collect_entities(vault_dir: Path, doc_id: str) -> list[dict]:
             continue
         entities.append({
             "file": path.name,
+            "eid": meta.get("id", path.stem),
             "label": meta.get("label", path.stem),
             "page": int(page),
             "source_text": src,
@@ -142,27 +143,46 @@ def _collect_entities(vault_dir: Path, doc_id: str) -> list[dict]:
 
 
 def highlight_pdf(pdf_path: Path, vault_dir: Path, doc_id: str) -> tuple[int, int]:
-    """Open pdf_path, inject highlights for each matching entity, save in place.
+    """Generate one highlighted PDF per vault entity for doc_id.
 
-    Returns (highlighted_count, unmatched_count).
+    The pristine source PDF at `pdf_path` is kept clean (any prior provenance
+    highlights are cleared). For each entity, a copy is written alongside as
+    `<entity_id>.pdf` with exactly one yellow highlight at the matched location.
+    Vault notes' Source links point at these per-entity PDFs so clicking only
+    surfaces the highlight relevant to the entity that was clicked.
+
+    Returns (matched_count, unmatched_count).
     """
-    doc = fitz.open(pdf_path)
-    cleared = _clear_existing_highlights(doc)
+    # Restore source to pristine state — clear any of our prior highlights.
+    src = fitz.open(pdf_path)
+    cleared = _clear_existing_highlights(src)
     if cleared:
-        print(f"[highlight] cleared {cleared} existing cco:provenance annotations", file=sys.stderr)
+        print(f"[highlight] cleared {cleared} prior cco:provenance annotations on source", file=sys.stderr)
+    src.save(pdf_path, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP)
+    pristine_bytes = src.write()
+    src.close()
 
     entities = _collect_entities(vault_dir, doc_id)
     if not entities:
         print(f"[highlight] no entities found for doc_id={doc_id} in {vault_dir}", file=sys.stderr)
-        doc.close()
         return 0, 0
+
+    # Clean up stale per-entity PDFs (idempotent re-runs).
+    # Glob `{doc_id}_*.pdf` only matches per-entity files, never the pristine `{doc_id}.pdf`.
+    for stale in pdf_path.parent.glob(f"{doc_id}_*.pdf"):
+        stale.unlink()
 
     matched = 0
     unmatched = 0
     for entity in entities:
-        page = doc[entity["page"] - 1]  # fitz is 0-indexed
+        out_path = pdf_path.parent / f"{entity['eid']}.pdf"
+        out_path.write_bytes(pristine_bytes)
+        doc = fitz.open(out_path)
+        page = doc[entity["page"] - 1]
         rects = _find_rects(page, entity["source_text"])
         if not rects:
+            doc.close()
+            out_path.unlink()
             print(f"  no rect match: {entity['file']} (page {entity['page']})")
             unmatched += 1
             continue
@@ -170,12 +190,11 @@ def highlight_pdf(pdf_path: Path, vault_dir: Path, doc_id: str) -> tuple[int, in
         annot.set_colors(stroke=HIGHLIGHT_COLOR)
         annot.set_info(title=ANNOT_TITLE, content=entity["label"], subject=entity["file"])
         annot.update()
-        print(f"  highlighted {entity['file']} (page {entity['page']}, {len(rects)} rect{'s' if len(rects)!=1 else ''})")
+        doc.save(out_path, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP)
+        doc.close()
         matched += 1
+        print(f"  wrote {out_path.name} (page {entity['page']}, {len(rects)} rect{'s' if len(rects)!=1 else ''})")
 
-    # Save in place (incremental keeps the original document structure intact)
-    doc.save(pdf_path, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP)
-    doc.close()
     return matched, unmatched
 
 

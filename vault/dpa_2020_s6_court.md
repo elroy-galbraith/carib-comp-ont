@@ -18,7 +18,7 @@ validation: PENDING
 ## Court
 
 **Class:** `cco:Definition`
-**Source:** [§2(1) — page 6](sources/dpa_2020_s6.pdf#page=6)
+**Source:** [§2(1) — page 6](sources/dpa_2020_s6_court.pdf#page=6)
 
 > 'Court' means the Supreme Court
 

@@ -20,7 +20,7 @@ validation: PENDING
 ## Data Protection Standards
 
 **Class:** `cco:Definition`
-**Source:** [§2(1) — page 7](sources/dpa_2020_s6.pdf#page=7)
+**Source:** [§2(1) — page 7](sources/dpa_2020_s6_data_protection_standards.pdf#page=7)
 
 > 'data protection standards' means the data protection standards as set out in sections 22 to 31, and reference to any of those standards by number means the standard as numbered in any of those sections
 

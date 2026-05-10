@@ -19,7 +19,7 @@ validation: PENDING
 ## Commissioner
 
 **Class:** `cco:Definition`
-**Source:** [§2(1) — page 6](sources/dpa_2020_s6.pdf#page=6)
+**Source:** [§2(1) — page 6](sources/dpa_2020_s6_commissioner.pdf#page=6)
 
 > 'Commissioner' means the office of Information Commissioner established by section 4
 

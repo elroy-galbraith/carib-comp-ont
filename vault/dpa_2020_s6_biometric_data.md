@@ -20,7 +20,7 @@ validation: PENDING
 ## Biometric Data
 
 **Class:** `cco:Definition`
-**Source:** [§2(1) — page 6](sources/dpa_2020_s6.pdf#page=6)
+**Source:** [§2(1) — page 6](sources/dpa_2020_s6_biometric_data.pdf#page=6)
 
 > 'biometric data', in relation to an individual, means any information relating to the physical, physiological or behavioural characteristics of that individual, which allows for the unique identification of the individual
 

@@ -20,7 +20,7 @@ validation: PENDING
 ## Good Practice
 
 **Class:** `cco:Definition`
-**Source:** [§2(1) — page 7](sources/dpa_2020_s6.pdf#page=7)
+**Source:** [§2(1) — page 7](sources/dpa_2020_s6_good_practice.pdf#page=7)
 
 > 'good practice' means such practice as appears to the Commissioner to be desirable having regard to the interests of data subjects and others, and includes (but is not limited to) compliance with the requirements of this Act
 
