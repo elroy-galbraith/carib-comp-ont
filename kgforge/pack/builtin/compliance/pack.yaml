@@ -100,8 +100,7 @@ competency_questions:
   - {id: cq3, label: "CQ3 — Definitions in DPA 2020",       file: sparql/cq3_definitions.rq}
 
 hooks:
-  module: null  # legal-definition term-name regex stays in scripts/highlight.py for Phase A;
-                # moves to a hook here in Phase B.
+  module: hooks.py  # legal-definition term-name regex (search_variants override).
 
 models:
   extractor: claude-haiku-4-5-20251001
