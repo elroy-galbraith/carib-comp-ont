@@ -1,0 +1,11 @@
+{
+  "name": "compliance",
+  "label": "Caribbean Compliance Ontology",
+  "pack": "builtin/compliance",
+  "vault_dir": "../../vault",
+  "inbox_dir": "../../inbox",
+  "sources_dir": "../../vault/sources",
+  "schema_ttl": "../../schema/carib_compliance.ttl",
+  "sparql_dir": "../../sparql",
+  "approval": {"backend": "git"}
+}
