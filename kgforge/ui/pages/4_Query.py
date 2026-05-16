@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import os
-import subprocess
-import sys
 
 import streamlit as st
 
 from kgforge.engine import ask as ask_engine
 from kgforge.engine import store as store_engine
+from kgforge.engine import to_turtle as to_turtle_engine
 from kgforge.ui.helpers import api_key_warning, project_chip, require_project
 
 st.set_page_config(page_title="Query · kgforge", layout="wide")
@@ -36,7 +35,11 @@ def _load_store(_schema_ttl: str, _vault_ttl: str):
 
 
 def _ensure_vault_ttl() -> bool:
-    """Build vault.ttl from the markdown vault if missing (or stale)."""
+    """Build vault.ttl from the markdown vault if missing (or stale).
+
+    Calls the engine in-process — no subprocess, no path assumptions about
+    where the app was launched from.
+    """
     if not project.vault_dir.exists():
         st.error(f"Vault dir not found: {project.vault_dir}")
         return False
@@ -45,16 +48,9 @@ def _ensure_vault_ttl() -> bool:
         return True
     st.info("Building vault.ttl from vault/*.md…")
     try:
-        result = subprocess.run(
-            [sys.executable, "scripts/to_turtle.py",
-             "--vault", str(project.vault_dir),
-             "--out", str(vault_ttl)],
-            cwd=project.project_dir.parent.parent,
-            capture_output=True, text=True,
-        )
-        if result.returncode != 0:
-            st.error(f"to_turtle failed: {result.stderr}")
-            return False
+        turtle = to_turtle_engine.build_turtle(project.vault_dir, project.pack)
+        vault_ttl.parent.mkdir(parents=True, exist_ok=True)
+        vault_ttl.write_text(turtle, encoding="utf-8")
         return True
     except Exception as exc:
         st.exception(exc)

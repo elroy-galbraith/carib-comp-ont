@@ -50,9 +50,21 @@ class Project:
         if backend_name == "filesystem":
             cfg.setdefault("vault_dir", self.vault_dir)
         elif backend_name == "git":
-            cfg.setdefault("repo_root", self.project_dir.parent.parent
-                           if (self.project_dir.parent.name == "projects")
-                           else self.project_dir)
+            # Honour an explicit "repo_root" in approval config (relative
+            # paths resolve against the project dir); otherwise auto-detect
+            # by walking up from the vault until we find a .git/. Falling
+            # back to project_dir is a last resort that will likely fail
+            # at gitpython instantiation — but at least with a clear
+            # error from the git backend itself rather than a silent miss.
+            explicit = cfg.pop("repo_root", None)
+            if explicit is not None:
+                explicit_path = Path(explicit)
+                cfg["repo_root"] = (
+                    explicit_path if explicit_path.is_absolute()
+                    else (self.project_dir / explicit_path).resolve()
+                )
+            else:
+                cfg["repo_root"] = _find_git_root(self.vault_dir) or self.project_dir
         return make_backend(backend_name, **cfg)
 
     @cached_property
@@ -77,6 +89,20 @@ def _resolve(base: Path, p: str) -> Path:
     """Resolve a path string from project.json against the project folder."""
     pp = Path(p)
     return pp if pp.is_absolute() else (base / pp).resolve()
+
+
+def _find_git_root(start: Path) -> Path | None:
+    """Walk up from `start` looking for a directory containing `.git`.
+
+    Returns the directory containing .git, or None if we hit the filesystem
+    root first. Used by the git approval backend to locate the repo when
+    the project.json doesn't pin it explicitly.
+    """
+    cur = Path(start).resolve()
+    for parent in (cur, *cur.parents):
+        if (parent / ".git").exists():
+            return parent
+    return None
 
 
 def _resolve_pack(project_dir: Path, pack_spec: str) -> DomainPack:

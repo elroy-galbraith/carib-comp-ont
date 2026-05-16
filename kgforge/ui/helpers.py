@@ -12,10 +12,19 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-# Load .env so ANTHROPIC_API_KEY is available to engine modules.
+# Load .env so ANTHROPIC_API_KEY is available to engine modules. We do NOT
+# pass override=True: a value already present in os.environ (set by the
+# shell, a wrapper, or the Settings-page override) takes precedence over
+# the .env file, matching standard dotenv conventions.
+#
+# Note: this differs from scripts/extractor.py and scripts/curator.py which
+# DO use override=True — that's a deliberate Windows-shell workaround
+# (ANTHROPIC_API_KEY can be pre-set as an empty string on Windows). The UI
+# is launched with a known clean process via `streamlit run`, so the
+# workaround isn't needed here.
 try:
     from dotenv import load_dotenv  # noqa: E402
-    load_dotenv(_ROOT / ".env", override=True)
+    load_dotenv(_ROOT / ".env")
 except ImportError:
     pass
 
