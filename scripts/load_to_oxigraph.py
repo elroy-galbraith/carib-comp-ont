@@ -30,15 +30,20 @@ except ImportError:
     sys.exit(1)
 
 REPO_ROOT = Path(__file__).parent.parent
+
+# Pack-driven configuration. CQ list comes from the pack so swapping packs
+# auto-runs the new domain's competency queries. Phase A: schema TTL path
+# stays compliance-specific until Phase B introduces the Project model.
+sys.path.insert(0, str(REPO_ROOT))
+from kgforge.pack import load_builtin  # noqa: E402
+
+_PACK = load_builtin("compliance")
+
 SCHEMA_TTL = REPO_ROOT / "schema" / "carib_compliance.ttl"
 VAULT_TTL  = REPO_ROOT / "vault" / "vault.ttl"
 SPARQL_DIR = REPO_ROOT / "sparql"
 
-COMPETENCY_QUERIES = [
-    ("CQ1 — Obligations on DataController", SPARQL_DIR / "cq1_obligations_on_controller.rq"),
-    ("CQ2 — Regulators and statutes",       SPARQL_DIR / "cq2_regulators.rq"),
-    ("CQ3 — Definitions in DPA 2020",       SPARQL_DIR / "cq3_definitions.rq"),
-]
+COMPETENCY_QUERIES = [(cq.label, SPARQL_DIR / Path(cq.file).name) for cq in _PACK.competency_questions]
 
 
 def build_vault_ttl() -> None:

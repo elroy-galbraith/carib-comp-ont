@@ -16,8 +16,15 @@ from pathlib import Path
 
 import yaml
 
-BASE_IRI = "https://ontology.carib-comp.org/compliance/"
-ENTITY_IRI = f"{BASE_IRI}entity/"
+# Pack-driven configuration. Refactored from hardcoded module-level constants
+# in Phase A; future use cases swap to a different pack.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from kgforge.pack import load_builtin  # noqa: E402
+
+_PACK = load_builtin("compliance")
+
+BASE_IRI = _PACK.base_iri
+ENTITY_IRI = _PACK.entity_iri
 SCHEMA_IRI = BASE_IRI
 
 PREFIXES = f"""\
@@ -27,18 +34,11 @@ PREFIXES = f"""\
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix cco:  <{SCHEMA_IRI}> .
-@prefix ccoe: <{ENTITY_IRI}> .
+@prefix {_PACK.prefix}:  <{SCHEMA_IRI}> .
+@prefix {_PACK.entity_prefix}: <{ENTITY_IRI}> .
 """
 
-PROP_MAP = {
-    "definedIn":            "cco:definedIn",
-    "enforcedBy":           "cco:enforcedBy",
-    "imposesObligationOn":  "cco:imposesObligationOn",
-    "applicableTo":         "cco:applicableTo",
-    "relatedTo":            "cco:relatedTo",
-    "partOfStatute":        "dcterms:isPartOf",
-}
+PROP_MAP = _PACK.property_map()
 
 
 def _ttl_str(value: str) -> str:
@@ -72,14 +72,22 @@ def entity_to_triples(meta: dict) -> list[str]:
     source_section = meta.get("source_section", "")
     properties = meta.get("properties", {}) or {}
 
-    subject = f"ccoe:{eid}"
+    subject = f"{_PACK.entity_prefix}:{eid}"
     lines: list[str] = [f"{subject}"]
 
-    # rdf:type
-    if cls in ("Statute", "Provision", "Definition", "Regulator", "Obligation"):
-        lines.append(f"    a cco:{cls} ;")
+    # rdf:type — known classes get the pack's prefix; unknown defaults to the
+    # pack's first class (legacy: this branch never fires for the compliance
+    # vault, but is kept so renamed/typo'd classes degrade gracefully). The
+    # pack model enforces min_length=1 on classes, so the first elif is the
+    # normal fallback path; the final else is belt-and-braces in case a
+    # partially-initialised model bypasses validation.
+    if cls in _PACK.class_names:
+        lines.append(f"    a {_PACK.prefix}:{cls} ;")
+    elif _PACK.class_names:
+        fallback = _PACK.class_names[0]
+        lines.append(f'    a {_PACK.prefix}:{fallback} ;  # unknown class "{cls}" — defaulted')
     else:
-        lines.append(f'    a cco:Provision ;  # unknown class "{cls}" — defaulted')
+        lines.append(f'    a owl:Thing ;  # unknown class "{cls}" and pack has no classes')
 
     # rdfs:label
     lines.append(f'    rdfs:label "{_ttl_str(label)}"@en ;')
@@ -93,14 +101,15 @@ def entity_to_triples(meta: dict) -> list[str]:
     if source_section:
         lines.append(f'    dcterms:source "{_ttl_str(source_section)}" ;')
 
-    # ontology properties (partOfStatute → dcterms:isPartOf is in PROP_MAP)
+    # ontology properties (entries with explicit `iri:` in the pack — e.g.
+    # partOfStatute → dcterms:isPartOf — are honoured here).
     for prop_key, prop_iri in PROP_MAP.items():
         value = properties.get(prop_key)
         if value:
             target = _strip_wikilink(value)
             if target == eid:
                 continue  # skip self-references
-            lines.append(f"    {prop_iri} ccoe:{target} ;")
+            lines.append(f"    {prop_iri} {_PACK.entity_prefix}:{target} ;")
 
     # close the triple set
     last = lines[-1]

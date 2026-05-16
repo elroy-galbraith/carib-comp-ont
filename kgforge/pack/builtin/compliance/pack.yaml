@@ -1,0 +1,111 @@
+# Caribbean Compliance Ontology — domain pack.
+#
+# Mirrors the values previously hardcoded in scripts/extractor.py,
+# scripts/to_turtle.py, scripts/highlight.py, scripts/ask.py, and
+# scripts/load_to_oxigraph.py. Phase A invariant: rendered outputs must be
+# byte-identical to pre-refactor scripts.
+#
+# IMPORTANT: the prompt templates preserve the 4-space leading indentation
+# that the original f-string + dedent() combination produces (the FEW_SHOT
+# substitution defeats dedent's common-leading-whitespace removal, so the
+# pre-refactor output is mixed-indent). Indent indicator |2 forces YAML to
+# strip exactly 2 leading spaces, leaving the literal content with the
+# 4-space prefix the original code emitted.
+
+schema_version: 1
+
+metadata:
+  name: compliance
+  label: "Caribbean Compliance Ontology"
+  description: >
+    Legal entities (Statute, Provision, Definition, Regulator, Obligation)
+    extracted from Caribbean statutory text.
+  version: "0.1.0"
+  author: "Elroy Galbraith"
+
+namespaces:
+  base_iri:      "https://ontology.carib-comp.org/compliance/"
+  entity_iri:    "https://ontology.carib-comp.org/compliance/entity/"
+  prefix:        "cco"
+  entity_prefix: "ccoe"
+
+classes:
+  - {name: Statute,    label: "Statute",    description: "An enacted primary legislation."}
+  - {name: Provision,  label: "Provision",  description: "A numbered section or subsection."}
+  - {name: Definition, label: "Definition", parent: Provision, description: "A formally defined term."}
+  - {name: Regulator,  label: "Regulator",  description: "An enforcement body."}
+  - {name: Obligation, label: "Obligation", description: "A duty imposed on a party."}
+
+properties:
+  - {name: definedIn,           domain: Definition, range: Provision}
+  - {name: enforcedBy,          domain: Statute,    range: Regulator}
+  - {name: imposesObligationOn, domain: Obligation, range: null}
+  - {name: applicableTo,        domain: null,       range: null}
+  - {name: relatedTo,           domain: null,       range: null}
+  # Fallback predicate present in vault frontmatter; aliased to Dublin Core.
+  - {name: partOfStatute,       domain: null,       range: Statute, iri: "dcterms:isPartOf"}
+
+prompt:
+  version: extractor-v1
+  text_window_chars: 8000
+  # FEW_SHOT mirrors scripts/extractor.py L109-128 verbatim (post-dedent).
+  # No placeholders.
+  few_shot: |
+    EXAMPLE INPUT (§2 of a data-protection statute):
+    "data controller" means a person who determines the purposes for which
+    and the manner in which any personal data are processed.
+
+    EXAMPLE OUTPUT:
+    {
+      "entities": [
+        {
+          "class": "Definition",
+          "id": "dpa2020_s2_data_controller",
+          "label": "Data Controller",
+          "source_section": "§2",
+          "source_text": "\"data controller\" means a person who determines the purposes for which and the manner in which any personal data are processed.",
+          "properties": { "definedIn": "dpa2020_s2" }
+        }
+      ]
+    }
+    ---
+  # System prompt mirrors scripts/extractor.py L246-252 verbatim (post-dedent).
+  # Single placeholder: {doc_id}.
+  system: |
+    You are a legal knowledge-engineering assistant. Extract ontology entities
+    from Caribbean statutory text. Use only the five OWL classes:
+    Statute, Provision, Definition, Regulator, Obligation.
+    Always prefix entity IDs with the document ID ({doc_id}_).
+    Be conservative: only extract entities explicitly stated in the text.
+  # User prompt mirrors scripts/extractor.py L254-265. dedent() in the
+  # original is a no-op because {FEW_SHOT} substitution introduces lines with
+  # 0 leading whitespace, so the common-leading-whitespace is 0. We preserve
+  # the original 4-space indent on the template's own lines via |2 indent
+  # indicator (YAML strips exactly 2 spaces, leaving 4).
+  user: |2
+        {few_shot}
+        Document ID: {doc_id}
+        Prompt version: {prompt_version}
+
+        Extract all ontology entities from the following statutory text.
+        Use the extract_entities tool.
+
+        ---
+        {text_window}
+        ---
+
+competency_questions:
+  - {id: cq1, label: "CQ1 — Obligations on DataController", file: sparql/cq1_obligations_on_controller.rq}
+  - {id: cq2, label: "CQ2 — Regulators and statutes",       file: sparql/cq2_regulators.rq}
+  - {id: cq3, label: "CQ3 — Definitions in DPA 2020",       file: sparql/cq3_definitions.rq}
+
+hooks:
+  module: null  # legal-definition term-name regex stays in scripts/highlight.py for Phase A;
+                # moves to a hook here in Phase B.
+
+models:
+  extractor: claude-haiku-4-5-20251001
+  ask:       claude-sonnet-4-6
+
+inbox:
+  accepted_extensions: [".pdf"]

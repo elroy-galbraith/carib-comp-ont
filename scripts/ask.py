@@ -47,12 +47,21 @@ except ImportError:
     sys.exit(1)
 
 REPO_ROOT  = Path(__file__).parent.parent
+
+# Pack-driven configuration. Schema TTL still lives at schema/<name>.ttl on
+# disk (path stays compliance-specific until Phase B introduces Project);
+# the prefixes that drive entity_catalog filtering come from the pack.
+sys.path.insert(0, str(REPO_ROOT))
+from kgforge.pack import load_builtin  # noqa: E402
+
+_PACK = load_builtin("compliance")
+
 SCHEMA_TTL = REPO_ROOT / "schema" / "carib_compliance.ttl"
 VAULT_TTL  = REPO_ROOT / "vault"  / "vault.ttl"
 SPARQL_DIR = REPO_ROOT / "sparql"
 
-DEFAULT_MODEL = "claude-sonnet-4-6"
-ENTITY_PREFIX = "https://ontology.carib-comp.org/compliance/entity/"
+DEFAULT_MODEL = _PACK.models.ask
+ENTITY_PREFIX = _PACK.entity_iri
 
 
 # ── Store + catalog ──────────────────────────────────────────────────────────
@@ -87,7 +96,7 @@ def entity_catalog(store: pyoxigraph.Store) -> str:
         local = iri[len(ENTITY_PREFIX):]
         cls   = str(r["cls"]).rsplit("/", 1)[-1].rstrip(">")
         label = str(r["label"]).split('"')[1] if '"' in str(r["label"]) else str(r["label"])
-        lines.append(f"  ccoe:{local}  ({cls})  — {label}")
+        lines.append(f"  {_PACK.entity_prefix}:{local}  ({cls})  — {label}")
     return "\n".join(lines) if lines else "  (vault is empty)"
 
 
