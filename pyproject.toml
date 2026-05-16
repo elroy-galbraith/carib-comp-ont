@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kgforge"
+version = "0.1.0"
+description = "Configurable PDF → typed-entities → graph → query platform."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Elroy Galbraith" }]
+
+# Engine-only dependencies. Enough to load packs, run extraction (with text
+# input or pdfplumber), build Turtle, run SPARQL, and call the Anthropic API.
+dependencies = [
+  "anthropic>=0.25.0",
+  "PyYAML>=6.0",
+  "pyoxigraph>=0.5.0",
+  "python-dotenv>=1.0.0",
+  "pydantic>=2.0",
+  "pdfplumber>=0.10.0",
+  "pymupdf>=1.24.0",
+]
+
+[project.optional-dependencies]
+# Curator: watchdog inbox loop + git-based approval backend.
+curator = [
+  "watchdog>=4.0.0",
+  "gitpython>=3.1.40",
+]
+# Layout-aware PDF text extraction (heavy; pulls PyTorch).
+docling = ["docling>=2.0.0"]
+# Streamlit UI (Phase C).
+ui = ["streamlit>=1.30.0"]
+# Convenience: everything.
+all = [
+  "kgforge[curator]",
+  "kgforge[docling]",
+  "kgforge[ui]",
+]
+dev = ["pytest>=7", "ruff>=0.4"]
+
+[project.scripts]
+kgforge-extract  = "scripts.extractor:main"
+kgforge-curate   = "scripts.curator:main"
+kgforge-ttl      = "scripts.to_turtle:main"
+kgforge-load     = "scripts.load_to_oxigraph:main"
+kgforge-ask      = "scripts.ask:main"
+kgforge-highlight = "scripts.highlight:main"
+
+[tool.setuptools.packages.find]
+include = ["kgforge*"]
+
+[tool.setuptools.package-data]
+"kgforge.pack.builtin" = ["*/pack.yaml", "*/schema.ttl", "*/sparql/*.rq", "*/hooks.py"]
