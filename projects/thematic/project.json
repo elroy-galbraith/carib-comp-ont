@@ -1,0 +1,11 @@
+{
+  "name": "thematic",
+  "label": "Thematic Analysis — synthetic interviews",
+  "pack": "builtin/thematic",
+  "vault_dir": "vault",
+  "inbox_dir": "inbox",
+  "sources_dir": "vault/sources",
+  "schema_ttl": "../../kgforge/pack/builtin/thematic/schema.ttl",
+  "sparql_dir": "../../kgforge/pack/builtin/thematic/sparql",
+  "approval": {"backend": "filesystem"}
+}

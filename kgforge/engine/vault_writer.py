@@ -32,12 +32,33 @@ def entity_to_markdown(
     source_text = entity.get("source_text", "")
     source_page = entity.get("source_page")
     raw_properties = entity.get("properties") or {}
-    # Wrap property values in Obsidian wikilink syntax so Properties become
-    # graph edges. to_turtle.py strips the brackets when emitting RDF.
-    properties = {
-        k: (v if (isinstance(v, str) and v.startswith("[[")) else f"[[{v}]]")
-        for k, v in raw_properties.items() if v
-    }
+
+    # Wrap object-property values in Obsidian wikilink syntax so Properties
+    # become graph edges; datatype properties (literals) pass through unwrapped.
+    # to_turtle.py strips the brackets when emitting RDF. List values (the
+    # LLM may legitimately return one or more codes per excerpt, etc.) are
+    # mapped element-wise so the YAML stays a list of wikilinks rather than
+    # one wikilink wrapping a Python list literal.
+    datatype_props = {p.name for p in pack.properties if p.datatype}
+
+    def _wrap(value):
+        if isinstance(value, str) and value.startswith("[["):
+            return value
+        return f"[[{value}]]"
+
+    properties = {}
+    for k, v in raw_properties.items():
+        # Strict empty check: keep 0 / False / "0" — only skip None or "".
+        if v is None or v == "":
+            continue
+        if k in datatype_props:
+            # Datatype properties: emit as-is. List literals are kept as
+            # lists; the Turtle writer expands them into multiple triples.
+            properties[k] = v
+        elif isinstance(v, list):
+            properties[k] = [_wrap(x) for x in v if x not in (None, "")]
+        else:
+            properties[k] = _wrap(v)
 
     meta = {
         "class":           cls,

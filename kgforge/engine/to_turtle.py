@@ -47,10 +47,28 @@ def _build_prefixes(pack: DomainPack) -> str:
     )
 
 
-def entity_to_triples(meta: dict, pack: DomainPack) -> list[str]:
+def entity_to_triples(
+    meta: dict,
+    pack: DomainPack,
+    *,
+    datatype_props: set[str] | None = None,
+    property_map: dict[str, str] | None = None,
+) -> list[str]:
+    """Emit Turtle triples for one entity.
+
+    The optional `datatype_props` and `property_map` kwargs let `build_turtle`
+    compute them once and pass them down to each entity, avoiding O(N×P)
+    recomputation across a large vault. Both default to recomputing from the
+    pack if absent, so existing callers keep working unchanged.
+    """
     eid = meta.get("id", "")
     if not eid:
         return []
+
+    if datatype_props is None:
+        datatype_props = {p.name for p in pack.properties if p.datatype}
+    if property_map is None:
+        property_map = pack.property_map()
 
     cls = meta.get("class", "")
     label = meta.get("label", eid)
@@ -87,14 +105,28 @@ def entity_to_triples(meta: dict, pack: DomainPack) -> list[str]:
         lines.append(f'    dcterms:source "{_ttl_str(source_section)}" ;')
 
     # ontology properties (entries with explicit `iri:` in the pack — e.g.
-    # partOfStatute → dcterms:isPartOf — are honoured here).
-    for prop_key, prop_iri in pack.property_map().items():
+    # partOfStatute → dcterms:isPartOf — are honoured here). Datatype
+    # properties emit quoted literals; object properties emit
+    # entity-prefixed IRIs. Both branches accept either a single value or a
+    # list, emitting one triple per element so multi-valued properties (an
+    # Excerpt with several codedAs Codes, a Theme with several Sub-themes)
+    # round-trip correctly.
+    for prop_key, prop_iri in property_map.items():
         value = properties.get(prop_key)
-        if value:
-            target = _strip_wikilink(value)
-            if target == eid:
-                continue  # skip self-references
-            lines.append(f"    {prop_iri} {pack.entity_prefix}:{target} ;")
+        if value is None or value == "":
+            continue
+        is_datatype = prop_key in datatype_props
+        items = value if isinstance(value, list) else [value]
+        for item in items:
+            if item is None or item == "":
+                continue
+            target = _strip_wikilink(item)
+            if is_datatype:
+                lines.append(f'    {prop_iri} "{_ttl_str(str(target))}" ;')
+            else:
+                if target == eid:
+                    continue  # skip self-references on object properties
+                lines.append(f"    {prop_iri} {pack.entity_prefix}:{target} ;")
 
     # close the triple set
     last = lines[-1]
@@ -105,6 +137,10 @@ def entity_to_triples(meta: dict, pack: DomainPack) -> list[str]:
 
 
 def build_turtle(vault_dir: Path, pack: DomainPack) -> str:
+    # Compute pack-wide derived data once instead of per-entity.
+    datatype_props = {p.name for p in pack.properties if p.datatype}
+    property_map = pack.property_map()
+
     parts: list[str] = [_build_prefixes(pack), ""]
     md_files = sorted(vault_dir.glob("*.md"))
     if not md_files:
@@ -114,7 +150,9 @@ def build_turtle(vault_dir: Path, pack: DomainPack) -> str:
         if meta is None:
             print(f"[to_turtle] SKIP {path.name}: no YAML frontmatter", file=sys.stderr)
             continue
-        triples = entity_to_triples(meta, pack)
+        triples = entity_to_triples(
+            meta, pack, datatype_props=datatype_props, property_map=property_map
+        )
         if triples:
             parts.extend(triples)
         else:

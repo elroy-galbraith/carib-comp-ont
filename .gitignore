@@ -10,7 +10,10 @@ dist/
 build/
 
 # Generated files — do not commit vault.ttl directly; regenerate from vault/*.md
-vault/vault.ttl
+# Pattern (no leading slash, contains slash) matches at the repo root AND under
+# any projects/<name>/vault/ subfolder.
+vault.ttl
+**/vault.ttl
 
 # Inbox PDFs — processing payloads; keep history clean
 inbox/*.pdf
