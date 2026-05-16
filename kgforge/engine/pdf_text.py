@@ -102,12 +102,13 @@ def extract_input(path: Path) -> tuple[str, dict[int, str]]:
             file=sys.stderr,
         )
         return body, {}
-    print(
-        f"ERROR: unsupported input extension {suffix!r}. "
-        f"Add it to pack.inbox.accepted_extensions and handle it here.",
-        file=sys.stderr,
+    # Library code shouldn't kill the interpreter — raise so the caller
+    # (CLI shim, UI, tests) can surface the problem in context.
+    raise ValueError(
+        f"Unsupported input extension {suffix!r}. "
+        f"Add it to pack.inbox.accepted_extensions and a handler in "
+        f"kgforge.engine.pdf_text.extract_input."
     )
-    sys.exit(1)
 
 
 def _normalize_for_match(text: str) -> str:
