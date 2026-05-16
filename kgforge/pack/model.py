@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
+from types import ModuleType  # noqa: F401  (used for the hooks_module annotation)
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -104,9 +105,10 @@ class DomainPack(BaseModel):
 
     Loaded from <pack_dir>/pack.yaml via kgforge.pack.loader.load_pack.
     `pack_dir` is set by the loader and used to resolve relative paths
-    (schema.ttl, sparql/*.rq, hooks.py).
+    (schema.ttl, sparql/*.rq, hooks.py). `hooks_module` is the imported
+    Python module if hooks.module is set in the YAML, else None.
     """
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     schema_version: int = 1
     metadata: Metadata
@@ -123,6 +125,9 @@ class DomainPack(BaseModel):
 
     # Set by the loader; not present in YAML.
     pack_dir: Path | None = Field(default=None, exclude=True)
+    # The loaded hooks module (or None when hooks.module is null / absent).
+    # Engine code reads functions off this with getattr(..., None).
+    hooks_module: Any | None = Field(default=None, exclude=True)
 
     @model_validator(mode="after")
     def _validate_references(self) -> DomainPack:
