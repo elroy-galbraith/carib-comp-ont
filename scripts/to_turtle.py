@@ -77,12 +77,17 @@ def entity_to_triples(meta: dict) -> list[str]:
 
     # rdf:type — known classes get the pack's prefix; unknown defaults to the
     # pack's first class (legacy: this branch never fires for the compliance
-    # vault, but is kept so renamed/typo'd classes degrade gracefully).
+    # vault, but is kept so renamed/typo'd classes degrade gracefully). The
+    # pack model enforces min_length=1 on classes, so the first elif is the
+    # normal fallback path; the final else is belt-and-braces in case a
+    # partially-initialised model bypasses validation.
     if cls in _PACK.class_names:
         lines.append(f"    a {_PACK.prefix}:{cls} ;")
-    else:
+    elif _PACK.class_names:
         fallback = _PACK.class_names[0]
         lines.append(f'    a {_PACK.prefix}:{fallback} ;  # unknown class "{cls}" — defaulted')
+    else:
+        lines.append(f'    a owl:Thing ;  # unknown class "{cls}" and pack has no classes')
 
     # rdfs:label
     lines.append(f'    rdfs:label "{_ttl_str(label)}"@en ;')

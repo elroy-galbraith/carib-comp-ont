@@ -9,6 +9,7 @@ import the model directly and inline-render.
 """
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -110,7 +111,9 @@ class DomainPack(BaseModel):
     schema_version: int = 1
     metadata: Metadata
     namespaces: Namespaces
-    classes: list[EntityClass]
+    # min_length=1: a pack with zero classes is meaningless and would break
+    # downstream callers that index into class_names for a fallback type.
+    classes: list[EntityClass] = Field(..., min_length=1)
     properties: list[EntityProperty] = Field(default_factory=list)
     prompt: PromptSpec
     competency_questions: list[CompetencyQuestion] = Field(default_factory=list)
@@ -135,9 +138,18 @@ class DomainPack(BaseModel):
                     f"property {p.name!r} has unknown domain class {p.domain!r}"
                 )
             if p.range and not p.datatype and p.range not in class_names:
-                # range can be a class OR an XSD datatype (when datatype=True)
-                # for object properties we require it to match a class
-                pass  # warn-only for now to allow gradual schemas
+                # range can be a class OR an XSD datatype (when datatype=True);
+                # for object properties we expect it to match a class. Stay
+                # warn-only (not raise) so half-built packs still load — the
+                # author sees the warning and can fix the typo without being
+                # blocked.
+                warnings.warn(
+                    f"property {p.name!r} has range {p.range!r} which is not "
+                    f"a known class in this pack; treating as a placeholder. "
+                    f"Known classes: {sorted(class_names)}",
+                    UserWarning,
+                    stacklevel=2,
+                )
         return self
 
     # ── convenience accessors used by refactored scripts ────────────────────
@@ -183,8 +195,13 @@ class DomainPack(BaseModel):
         """Return {property_name: prefixed_iri} for all properties.
 
         Drop-in replacement for the hardcoded PROP_MAP dict in to_turtle.py.
+        Single pass over self.properties (was O(N²) when delegating to
+        property_iri per item).
         """
-        return {p.name: self.property_iri(p.name) for p in self.properties}
+        return {
+            p.name: (p.iri if p.iri else f"{self.namespaces.prefix}:{p.name}")
+            for p in self.properties
+        }
 
     def class_iri(self, cls_name: str) -> str:
         for c in self.classes:
