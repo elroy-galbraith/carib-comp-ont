@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
 import sqlite3
 from datetime import datetime, timezone
@@ -35,10 +36,29 @@ class FilesystemBackend(ApprovalBackend):
     # ── persistence ─────────────────────────────────────────────────────────
 
     def _conn(self) -> sqlite3.Connection:
+        # timeout=10s: the curator and the Streamlit UI can both hold
+        # connections to the same audit.sqlite. Without a timeout, concurrent
+        # writes raise "database is locked" immediately; this lets the second
+        # writer wait up to 10s for the first to release the lock.
         self.audit_db.parent.mkdir(parents=True, exist_ok=True)
-        conn = sqlite3.connect(self.audit_db)
+        conn = sqlite3.connect(self.audit_db, timeout=10.0)
         conn.row_factory = sqlite3.Row
         return conn
+
+    def _row_id(self, ref: SubmissionRef) -> int:
+        """Validate and unwrap a SubmissionRef into a row id, with a clear error."""
+        if ref.backend != self.name:
+            raise ValueError(
+                f"{self.name} backend can't handle a ref from backend "
+                f"{ref.backend!r} (handle={ref.handle!r})"
+            )
+        try:
+            return int(ref.handle)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"{self.name} backend expected an integer row-id handle, got "
+                f"{ref.handle!r}"
+            ) from exc
 
     def _ensure_schema(self) -> None:
         with self._conn() as c:
@@ -109,33 +129,60 @@ class FilesystemBackend(ApprovalBackend):
         ]
 
     def approve(self, ref: SubmissionRef) -> None:
+        row_id = self._row_id(ref)
         with self._conn() as c:
             c.execute(
                 "UPDATE submissions SET status='APPROVED' WHERE id=?",
-                (int(ref.handle),),
+                (row_id,),
             )
         log.info("approved audit row %s (doc_id=%s)", ref.handle, ref.doc_id)
         ref.status = "APPROVED"
 
     def reject(self, ref: SubmissionRef, reason: str) -> None:
+        row_id = self._row_id(ref)
         ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        # Move files
         with self._conn() as c:
             row = c.execute(
                 "SELECT doc_id, files_json FROM submissions WHERE id=?",
-                (int(ref.handle),),
+                (row_id,),
             ).fetchone()
             if row is None:
                 raise KeyError(f"no submission with id={ref.handle}")
             files = [Path(p) for p in json.loads(row["files_json"])]
             dest_dir = self.rejected_dir / f"{row['doc_id']}_{ts}"
-            dest_dir.mkdir(parents=True, exist_ok=True)
-            for src in files:
-                if src.exists():
+
+            # Pre-flight: confirm we can write to the destination before we
+            # touch any source files. Files that already vanished are skipped
+            # (idempotent retry) rather than failing the whole reject.
+            present = [src for src in files if src.exists()]
+            if present:
+                dest_dir.mkdir(parents=True, exist_ok=True)
+                if not os.access(dest_dir, os.W_OK):
+                    raise PermissionError(
+                        f"reject: dest_dir not writable: {dest_dir}"
+                    )
+
+            moved: list[Path] = []
+            try:
+                for src in present:
                     shutil.move(str(src), dest_dir / src.name)
+                    moved.append(src)
+            except OSError as exc:
+                # Best-effort rollback: put back what we already moved so the
+                # vault and the audit log stay consistent.
+                for src in moved:
+                    try:
+                        shutil.move(str(dest_dir / src.name), str(src))
+                    except OSError:
+                        log.exception("rollback failed for %s", src)
+                raise OSError(
+                    f"reject: failed mid-move at file {len(moved) + 1}/"
+                    f"{len(present)} (rolled back). Original error: {exc}"
+                ) from exc
+
             c.execute(
                 "UPDATE submissions SET status='REJECTED', notes=? WHERE id=?",
-                (reason, int(ref.handle)),
+                (reason, row_id),
             )
         log.info("rejected audit row %s (doc_id=%s) → %s", ref.handle, ref.doc_id, dest_dir)
         ref.status = "REJECTED"

@@ -15,9 +15,11 @@ import anthropic
 
 try:
     import pyoxigraph
-except ImportError:
-    print("ERROR: pyoxigraph not installed.", file=sys.stderr)
-    sys.exit(1)
+except ImportError as _exc:
+    raise ImportError(
+        "pyoxigraph is required by kgforge.engine.ask. "
+        "Install with: pip install pyoxigraph"
+    ) from _exc
 
 from kgforge.pack import DomainPack
 

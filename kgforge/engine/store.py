@@ -11,9 +11,11 @@ from pathlib import Path
 
 try:
     import pyoxigraph
-except ImportError:
-    print("ERROR: pyoxigraph not installed. Run: pip install pyoxigraph", file=sys.stderr)
-    sys.exit(1)
+except ImportError as _exc:
+    raise ImportError(
+        "pyoxigraph is required by kgforge.engine.store. "
+        "Install with: pip install pyoxigraph"
+    ) from _exc
 
 
 def load_store(*ttl_paths: Path) -> "pyoxigraph.Store":

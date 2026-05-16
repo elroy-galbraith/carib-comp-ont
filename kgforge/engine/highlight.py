@@ -6,6 +6,7 @@ falls back to a generic longest-prefix matcher when the hook is absent.
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -14,9 +15,13 @@ import yaml
 
 try:
     import fitz  # PyMuPDF
-except ImportError:
-    print("ERROR: pymupdf not installed.", file=sys.stderr)
-    sys.exit(1)
+except ImportError as _exc:
+    # Library modules must not sys.exit — re-raise so callers (CLI shim, UI,
+    # tests) can decide how to surface the missing dependency.
+    raise ImportError(
+        "pymupdf is required by kgforge.engine.highlight. "
+        "Install with: pip install pymupdf"
+    ) from _exc
 
 from kgforge.pack import DomainPack
 
@@ -133,7 +138,16 @@ def highlight_pdf(
             f"[highlight] cleared {cleared} prior {marker} annotations on source",
             file=sys.stderr,
         )
-    src.save(pdf_path, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP)
+        # Write cleared source via a sibling temp file + atomic rename so an
+        # interrupted save can't truncate the original PDF. (We only persist
+        # to disk when we actually changed something — for the no-prior-
+        # annotations case, the src.write() below still gives us the bytes
+        # we need for the per-entity copies without touching pdf_path.)
+        tmp_path = pdf_path.with_suffix(pdf_path.suffix + ".tmp")
+        src.save(str(tmp_path), encryption=fitz.PDF_ENCRYPT_KEEP)
+        src.close()
+        os.replace(tmp_path, pdf_path)
+        src = fitz.open(pdf_path)
     pristine_bytes = src.write()
     src.close()
 

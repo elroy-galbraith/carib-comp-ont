@@ -53,8 +53,19 @@ class GitBackend(ApprovalBackend):
         self.repo.git.checkout("-b", branch_name)
         log.info("created branch %s", branch_name)
 
-        # Stage files (paths relative to repo root)
-        rel_paths = [str(f.relative_to(self.repo_root)) for f in sub.vault_files]
+        # Stage files (paths relative to repo root). The git backend can only
+        # commit files inside the repo working tree; surface a clear error if
+        # a project misconfiguration points its vault elsewhere.
+        rel_paths: list[str] = []
+        for f in sub.vault_files:
+            try:
+                rel_paths.append(str(f.resolve().relative_to(self.repo_root.resolve())))
+            except ValueError as exc:
+                raise ValueError(
+                    f"GitBackend cannot stage {f!r}: path is not inside the repo "
+                    f"root {self.repo_root}. Move the vault into the repo or "
+                    f"switch this project's approval backend to 'filesystem'."
+                ) from exc
         self.repo.index.add(rel_paths)
 
         timestamp = sub.timestamp or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

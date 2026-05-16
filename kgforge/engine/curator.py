@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 import shutil
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -133,6 +134,13 @@ def process_pdf(
 
 
 class _InboxHandler(FileSystemEventHandler):
+    """Dispatch each new file to a worker thread so the observer thread
+    stays responsive. The worker waits a short settle-time for the writer
+    to finish flushing before extraction starts (PDF copies can arrive in
+    multiple write events)."""
+
+    SETTLE_SECONDS = 1.0
+
     def __init__(self, **kwargs):
         super().__init__()
         self.kwargs = kwargs
@@ -141,12 +149,20 @@ class _InboxHandler(FileSystemEventHandler):
         if event.is_directory:
             return
         path = Path(event.src_path)
-        if path.suffix.lower() in self.kwargs["pack"].inbox.accepted_extensions:
-            time.sleep(1.0)
+        if path.suffix.lower() not in self.kwargs["pack"].inbox.accepted_extensions:
+            return
+
+        def _worker() -> None:
+            # Settle: give the producer a beat to finish writing. Done in a
+            # worker thread so the watchdog observer keeps draining events.
+            time.sleep(self.SETTLE_SECONDS)
             try:
                 process_pdf(path, **self.kwargs)
             except Exception as exc:
-                log.error("unhandled error: %s", exc)
+                log.error("unhandled error processing %s: %s", path.name, exc)
+
+        threading.Thread(target=_worker, name=f"curator-{path.stem}",
+                         daemon=True).start()
 
 
 def process_existing(inbox_dir: Path, **kwargs) -> None:
