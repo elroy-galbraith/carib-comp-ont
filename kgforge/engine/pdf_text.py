@@ -1,7 +1,13 @@
-"""PDF text extraction with page-number tracking.
+"""Document text extraction with optional page-number tracking.
 
-Lifted verbatim from scripts/extractor.py (Phase A). Pack-independent;
-supports docling (preferred) with pdfplumber fallback.
+Dispatch by file extension:
+    .pdf            → docling (preferred) or pdfplumber fallback, with page map
+    .txt .md .vtt   → plain UTF-8 read, no page map
+
+The two-tuple return shape (flat_text, page_texts_dict) is preserved
+across both paths. Page-text dict is empty for text inputs, so
+find_page_for_text harmlessly returns None for every entity (vault writer
+then omits source_page from the frontmatter).
 """
 from __future__ import annotations
 
@@ -73,6 +79,34 @@ def extract_text(pdf_path: Path) -> tuple[str, dict[int, str]]:
         pass
 
     print("ERROR: no PDF extractor available. Install docling or pdfplumber.", file=sys.stderr)
+    sys.exit(1)
+
+
+_TEXT_EXTENSIONS = {".txt", ".md", ".markdown", ".vtt", ".srt"}
+
+
+def extract_input(path: Path) -> tuple[str, dict[int, str]]:
+    """Dispatch on file extension. Returns (flat_text, page_map).
+
+    For text-shaped inputs the page_map is empty; the engine then writes
+    entities without source_page (which is appropriate for transcripts,
+    journals, prose where "page" isn't the right granularity).
+    """
+    suffix = path.suffix.lower()
+    if suffix == ".pdf":
+        return extract_text(path)
+    if suffix in _TEXT_EXTENSIONS:
+        body = path.read_text(encoding="utf-8")
+        print(
+            f"[extractor] text input read ({len(body)} chars, no page map)",
+            file=sys.stderr,
+        )
+        return body, {}
+    print(
+        f"ERROR: unsupported input extension {suffix!r}. "
+        f"Add it to pack.inbox.accepted_extensions and handle it here.",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 

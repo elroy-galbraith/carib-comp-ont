@@ -32,12 +32,21 @@ def entity_to_markdown(
     source_text = entity.get("source_text", "")
     source_page = entity.get("source_page")
     raw_properties = entity.get("properties") or {}
-    # Wrap property values in Obsidian wikilink syntax so Properties become
-    # graph edges. to_turtle.py strips the brackets when emitting RDF.
-    properties = {
-        k: (v if (isinstance(v, str) and v.startswith("[[")) else f"[[{v}]]")
-        for k, v in raw_properties.items() if v
-    }
+
+    # Wrap object-property values in Obsidian wikilink syntax so Properties
+    # become graph edges; datatype properties (literals) pass through unwrapped.
+    # to_turtle.py strips the brackets when emitting RDF.
+    datatype_props = {p.name for p in pack.properties if p.datatype}
+    properties = {}
+    for k, v in raw_properties.items():
+        if not v:
+            continue
+        if k in datatype_props:
+            properties[k] = v
+        elif isinstance(v, str) and v.startswith("[["):
+            properties[k] = v
+        else:
+            properties[k] = f"[[{v}]]"
 
     meta = {
         "class":           cls,

@@ -65,7 +65,9 @@ def extract(
     if text is not None:
         body = text
     elif pdf_path is not None:
-        body, page_texts = pdf_text.extract_text(pdf_path)
+        # Despite the parameter name, this dispatches by extension:
+        # PDFs go through docling/pdfplumber; .txt/.md/.vtt are read as-is.
+        body, page_texts = pdf_text.extract_input(pdf_path)
     else:
         raise ValueError("extract: must pass either pdf_path or text")
 

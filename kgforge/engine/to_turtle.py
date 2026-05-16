@@ -87,13 +87,20 @@ def entity_to_triples(meta: dict, pack: DomainPack) -> list[str]:
         lines.append(f'    dcterms:source "{_ttl_str(source_section)}" ;')
 
     # ontology properties (entries with explicit `iri:` in the pack — e.g.
-    # partOfStatute → dcterms:isPartOf — are honoured here).
+    # partOfStatute → dcterms:isPartOf — are honoured here). Datatype
+    # properties emit a quoted literal; object properties emit an
+    # entity-prefixed IRI.
+    datatype_props = {p.name for p in pack.properties if p.datatype}
     for prop_key, prop_iri in pack.property_map().items():
         value = properties.get(prop_key)
-        if value:
-            target = _strip_wikilink(value)
+        if value is None or value == "":
+            continue
+        target = _strip_wikilink(value)
+        if prop_key in datatype_props:
+            lines.append(f'    {prop_iri} "{_ttl_str(str(target))}" ;')
+        else:
             if target == eid:
-                continue  # skip self-references
+                continue  # skip self-references on object properties
             lines.append(f"    {prop_iri} {pack.entity_prefix}:{target} ;")
 
     # close the triple set
